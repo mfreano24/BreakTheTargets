@@ -102,11 +102,15 @@ class Manager{
         float pitch_mag = 0.0f;
         float yaw_mag = 0.0f;
         float roll_mag = 0.0f;
+        float speed_mag = 0.0f;
 
         void CalculateTurnAcceleration(float _x, float _y, float _z);
         void StorePreviousDirection(float _x,float _y, float _z);
         void UpdateRotation(float _x, float _y, float _z);
         void DrawHelicopter(std::shared_ptr<MatrixStack> P, std::shared_ptr<MatrixStack> MV, std::shared_ptr<Program> prog, double t);
+        void CheckForEnvironmentCollision();
+        void PlayerDeath();
+        void FireMissile();
         void DebugRKey();
         #pragma endregion
 };

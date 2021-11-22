@@ -12,7 +12,7 @@ vec3 base_forward, base_right, base_up;
 vec3 heli_forward, heli_right, heli_up;
 mat4 R;
 shared_ptr<MatrixStack> heli_stack;
-const float HVEL = 0.5f;
+float HVEL = 0.5f;
 
 float heli_yaw = 0.0f;
 float heli_pitch = 0.0f;
@@ -29,6 +29,10 @@ double t, dt, prev_t;
 float prev_pitch = 0.0f, prev_yaw = 0.0f, prev_roll = 0.0f;
 
 shared_ptr<ParticleSystem> ps;
+
+bool isDead = false;
+float resetTimer = 0.0f;
+float camera_distance = 5.0f;
 
 void PrintHeliVectors() {
 	cerr << "========================" << endl;
@@ -59,7 +63,7 @@ void PrintRMatrix() {
 
 void Manager::DebugRKey() {
 	//repurposing this to a general "press R to debug" function
-	ps->PlayAt(heli_position + 50.0f * heli_forward);
+	PlayerDeath();
 }
 
 
@@ -136,7 +140,11 @@ void Manager::StorePreviousDirection(float _x, float _y, float _z) {
 }
 
 void Manager::UpdateRotation(float _x, float _y, float _z) {
-
+	if (isDead) {
+		_x = 0.0f;
+		_y = 0.0f;
+		_z = 0.0f;
+	}
 	CalculateTurnAcceleration(_x, _y, _z);
 	StorePreviousDirection(_x, _y, _z);
 	//maintain speed until we hit 0
@@ -209,6 +217,33 @@ void Manager::UpdateRotation(float _x, float _y, float _z) {
 
 #pragma endregion
 
+void Manager::FireMissile() {
+	//TODO: implement this, spawn the missile
+}
+
+void Manager::CheckForEnvironmentCollision() {
+	//check if the helicopter has collided with the environment
+	float currX = heli_position.x;
+	float currZ = heli_position.z;
+
+	//get the height of the mesh here
+	float meshHeight = 0.0f; //TODO - actually figure this out. woweee.
+
+	if (heli_position.y <= meshHeight) {
+		//die
+		ps->PlayAt(heli_position);
+		exit(0);
+	}
+}
+
+void Manager::PlayerDeath() {
+	isDead = true;
+	camera_distance = 20.0f;
+	ps->PlayAt(heli_position);
+	HVEL = 0.0f;
+
+}
+
 void Manager::DrawHelicopter(shared_ptr<MatrixStack> P, shared_ptr<MatrixStack> MV, shared_ptr<Program> prog, double t)
 {
 	//From A1
@@ -253,7 +288,7 @@ void Manager::init_helicopter(){
 	camera = make_shared<Camera>();
 
 	//initialize helicopter
-	heli_position = vec3(100.0f, 25.0f, 0.0f);
+	heli_position = vec3(1000.0f, 100.0f, 1000.0f);
 	heli_rotation = vec3(0.0f, 0.0f, 0.0f);
 
 	base_forward = vec3(0.0f, 0.0f, 1.0f); //+Z is forward initially
@@ -305,6 +340,20 @@ void Manager::render_helicopter(){
 	prev_t = t;
 	t = glfwGetTime();
 	dt = t - prev_t;
+	if (isDead) {
+		resetTimer += dt;
+		if (resetTimer > 1.5f) {
+			
+			heli_position = vec3(1000.0f, 100.0f, 1000.0f);
+			HVEL = 0.5f;
+			camera_distance = 5.0f;
+			heli_forward = base_forward;
+			heli_up = base_up;
+			heli_right = base_right;
+			resetTimer = 0.0f;
+			isDead = false;
+		}
+	}
 	
 	#pragma region SettingUp
 	// Get current frame buffer size.
@@ -343,9 +392,11 @@ void Manager::render_helicopter(){
 	//PrintHeliVectors();
 
 	heli_position += HVEL * heli_forward; //move the helicopter
+	
+	CheckForEnvironmentCollision();
 
 	//set up the camera position from the helicopter
-	vec3 camera_position = heli_position - 5.0f * heli_forward + heli_up; //position + F where F is forward. we probably need to predefine F(t=0).
+	vec3 camera_position = heli_position - camera_distance * heli_forward + heli_up; //position + F where F is forward. we probably need to predefine F(t=0).
 	vec3 camera_target = heli_position + 1.35f * heli_up;
 	vec3 camera_up = heli_up;
 
@@ -362,7 +413,8 @@ void Manager::render_helicopter(){
 	skyboxprog->bind();
 	MV->pushMatrix();
 	MV->translate(heli_position);
-	MV->scale(500.0f);
+	MV->scale(5000.0f); //the mesh is about 3000 units wide, this way the skybox doesnt overlap in any direction, hopefully!
+	//zfar exists.
 	
 	//MV->rotate(glm::pi<float>(), vec3(1.0, 0.0, 0.0));
 	if (keyPresses[(unsigned)'c'] % 2) {
@@ -390,59 +442,54 @@ void Manager::render_helicopter(){
 	worldprog->bind();
 	MV->pushMatrix();
 
-	MV->translate(glm::vec3(-10.0f,-5.0f,-10.0f));
-	MV->scale(100.0f, 25.0f, 100.0f);
-
 	glUniformMatrix4fv(worldprog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
 	glUniformMatrix4fv(worldprog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
+	glUniformMatrix4fv(worldprog->getUniform("V"), 1, GL_FALSE, value_ptr(glm::inverse(glm::transpose(MV->topMatrix()))));
 	glUniform3f(worldprog->getUniform("kd"), 0.5f, 0.5f, 1.0f);
 
-	//cerr << "checking noiseMesh->draw... ";
 	noiseMesh->draw(worldprog);
-	//cerr << "clear!" << endl;
 
 	MV->popMatrix();
 	worldprog->unbind();
 	#pragma endregion
 
 	#pragma region DrawHelicopter
-	//prog->bind();
+	if (!isDead) {
+		MV->pushMatrix();
 
-	MV->pushMatrix();
+		MV->translate(heli_position);
+		MV->multMatrix(R);
 
-	MV->translate(heli_position);
-	MV->multMatrix(R);
+		//model rotations
+		MV->rotate(glm::pi<float>() / 2.0f, vec3(0.0f, 1.0f, 0.0f));
 
-	//model rotations
-	MV->rotate(glm::pi<float>()/2.0f, vec3(0.0f, 1.0f, 0.0f));
+		float deg = pi<float>() / 12.0f;
+		float pitch_sign = 0.0f, yaw_sign = 0.0f, roll_sign = 0.0f;
+		if (prev_pitch != 0.0f) {
+			pitch_sign = prev_pitch / abs(prev_pitch);
+		}
+		if (prev_yaw != 0.0f) {
+			yaw_sign = prev_yaw / abs(prev_yaw);
+		}
+		if (prev_roll != 0.0f) {
+			roll_sign = prev_roll / abs(prev_roll);
+		}
 
-	//visual flair rotations
-	float deg = pi<float>() / 12.0f;
-	float pitch_sign = 0.0f, yaw_sign = 0.0f, roll_sign = 0.0f;
-	if (prev_pitch != 0.0f) {
-		pitch_sign = prev_pitch / abs(prev_pitch);
-	}
-	if (prev_yaw != 0.0f) {
-		yaw_sign = prev_yaw / abs(prev_yaw);
-	}
-	if (prev_roll != 0.0f) {
-		roll_sign = prev_roll / abs(prev_roll);
+
+		MV->rotate(pitch_mag * pitch_sign * deg, vec3(0.0f, 0.0f, -1.0f));
+		MV->rotate(yaw_mag * yaw_sign * deg, vec3(0.0f, 1.0f, 0.0f));
+		MV->rotate(roll_mag * roll_sign * deg, vec3(1.0f, 0.0f, 0.0f));
+
+
+		DrawHelicopter(P, MV, prog, t);
+
+		MV->popMatrix();
+
 	}
 	
-	
-	MV->rotate(pitch_mag * pitch_sign * deg, vec3(0.0f, 0.0f, -1.0f));
-	MV->rotate(yaw_mag * yaw_sign * deg, vec3(0.0f, 1.0f, 0.0f));
-	MV->rotate(roll_mag * roll_sign * deg, vec3(1.0f, 0.0f, 0.0f));
-
-
-	DrawHelicopter(P, MV, prog, t);
-
-	MV->popMatrix();
 
 	//prog->unbind();
 	#pragma endregion
-
-	
 	
 
 	//particle system stepping
@@ -456,50 +503,7 @@ void Manager::render_helicopter(){
 	}
 
 	glDisable(GL_PROGRAM_POINT_SIZE);
-	glDisable(GL_POINT_SPRITE);
-
-	MV->pushMatrix();
-	MV->translate(heli_position);
-	#pragma region DebugLines
-	// Setup the projection matrix
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadMatrixf(glm::value_ptr(P->topMatrix()));
-
-	// Setup the modelview matrix
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-
-	glLoadMatrixf(glm::value_ptr(MV->topMatrix()));
-
-	// Draw frame
-	glLineWidth(2);
-	glBegin(GL_LINES);
-	//forward vector
-	glColor3f(1, 0, 0);
-	glVertex3f(0, 0, 0);
-	glVertex3f(heli_forward.x, heli_forward.y, heli_forward.z);
-
-	//up vector
-	glColor3f(0, 0, 1);
-	glVertex3f(0, 0, 0);
-	glVertex3f(heli_up.x, heli_up.y, heli_up.z);
-
-	//right vector
-	glColor3f(0, 1, 0);
-	glVertex3f(0, 0, 0);
-	glVertex3f(heli_right.x, heli_right.y, heli_right.z);
-	glEnd();
-
-	// Pop modelview matrix
-	glPopMatrix();
-
-	// Pop projection matrix
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	#pragma endregion
-
-	
+	glDisable(GL_POINT_SPRITE);	
 
 	MV->popMatrix();
 

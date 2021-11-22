@@ -3,6 +3,7 @@ attribute vec4 aPos; // in object space
 attribute vec3 aNor; // in object space
 uniform mat4 P;
 uniform mat4 MV;
+uniform mat4 V;
 
 varying vec4 vPos;
 

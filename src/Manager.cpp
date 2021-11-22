@@ -67,6 +67,10 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 		Manager::Instance().deltaZRot = 0.0f;
 	}
 
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        
+    }
+
 
     #pragma endregion
 
@@ -114,6 +118,7 @@ void Manager::InitializeShaders()
 	worldprog->init();
 	worldprog->addUniform("P");
 	worldprog->addUniform("MV");
+    worldprog->addUniform("V");
 	worldprog->addUniform("kd");
 	worldprog->addAttribute("aPos");
 	worldprog->addAttribute("aNor");
@@ -206,27 +211,11 @@ void Manager::GameLoop(GLFWwindow* _window){
 	// Set mouse button callback.
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
     
+    init_meshcreator(); //this should be deprecated but id rather keep the code initializing the mesh itself here
+    init_helicopter();
     while(!glfwWindowShouldClose(window)) {
 
-        //check init trigger
-        if(initTrigger){
-            if(inMeshCreatorMode){
-                
-                init_meshcreator();
-            }
-            else{
-                init_helicopter();
-            }
-            initTrigger = false;
-        }
-
-		// Render scene depending on
-        if(inMeshCreatorMode){
-            render_meshcreator();
-        }
-        else{
-            render_helicopter();
-        }
+        render_helicopter();
 		
 		// Swap front and back buffers.
 		glfwSwapBuffers(window);
@@ -287,21 +276,56 @@ void Manager::UpdateNoiseMesh(){
     //cerr << "running update noise mesh" << endl;
     //loop through and make new points
     pointGrid = vector<vector<vec3>>(controlRows, vector<vec3>(controlRows, vec3(0.0f))); //clear the pointgrid and make it all (0,0,0).
+    float debugYmax = -FLT_MAX, debugYmin = FLT_MAX;
+    float debugXmax = -FLT_MAX, debugXmin = FLT_MAX;
+    float debugZmax = -FLT_MAX, debugZmin = FLT_MAX;
     for(int x = 0; x < controlRows; x++){
         for(int y = 0; y < controlRows; y++){
             //add perlin height to gridpoints
             float randomX = ((float)rand()) / (float)RAND_MAX;
             float randomY = ((float)rand()) / (float)RAND_MAX;
 			float randomZ = ((float)rand()) / (float)RAND_MAX;
+            //set the scale here so we can 
             pointGrid[x][y] = vec3((float)x + randomX * 1.0f - 0.5f, 0.0f, (float)y + randomZ * 1.0f - 0.5f);
             
             
             
             pointGrid[x][y].y = randomY * 3.0f - 1.5f;
+
+            pointGrid[x][y].x *= 100.0f; //scale here so we can coincide our helicopter's position with a position on the mesh!
+            pointGrid[x][y].z *= 100.0f;
+            pointGrid[x][y].y *= 30.0f;
+
+            //only check the grid points, as every value on the splines will be something inbetween those.
+            if (pointGrid[x][y].y < debugYmin) {
+                debugYmin = pointGrid[x][y].y;
+            }
+
+			if (pointGrid[x][y].y > debugYmax) {
+                debugYmax = pointGrid[x][y].y;
+			}
             
-            
+
+			if (pointGrid[x][y].x < debugXmin) {
+                debugXmin = pointGrid[x][y].x;
+			}
+
+			if (pointGrid[x][y].x > debugXmax) {
+                debugXmax = pointGrid[x][y].x;
+			}
+
+			if (pointGrid[x][y].z < debugZmin) {
+                debugZmin = pointGrid[x][y].z;
+			}
+
+			if (pointGrid[x][y].z > debugZmax) {
+				debugZmax = pointGrid[x][y].z;
+			}
         }
     }
+
+    cerr << endl << "X x Y x Z: " << endl << "[" << debugXmin << ", " << debugXmax << "] x [" << debugYmin << ", " << debugYmax <<
+        "] x [" << debugZmin << ", " << debugZmax << "]" << endl;
 
     bool createIndBuf = false;
     //create new mesh
