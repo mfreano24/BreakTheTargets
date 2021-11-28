@@ -19,6 +19,8 @@ class PerlinNoise{
     PerlinNoise(int _sz); //noise will be square
     ~PerlinNoise();
     
+    void ThreadSetNoise(float x, float y, float& minY, float& maxY);
+
     //make perm vector with shuffling
     std::vector<int> MakePerm();
     void ShuffleVec(std::vector<int>& P);

@@ -2,9 +2,12 @@
 #include "stb_image.h"
 
 #include <iomanip>
+#include <thread>
 
 using namespace std;
 using namespace glm;
+
+//adapted from (tutorial name)
 
 PerlinNoise::PerlinNoise(){
     sz = 20;
@@ -19,11 +22,8 @@ PerlinNoise::PerlinNoise(int _sz){
     float minY = FLT_MAX, maxY = -FLT_MAX;
     for (int y = 0; y < sz; y++) {
         for (int x = 0; x < sz; x++) {
-            float n = Noise2D(0.01f * x, 0.01f * y); //[-1.0, 1.0]
-            noiseData[y][x] = n;
-
-            minY = __min(minY, n);
-            maxY = __max(maxY, n);
+            //TODO: thread this too.
+            ThreadSetNoise(x, y, minY, maxY);
         }
     }
 
@@ -42,6 +42,14 @@ PerlinNoise::PerlinNoise(int _sz){
 
 PerlinNoise::~PerlinNoise(){
 
+}
+
+void PerlinNoise::ThreadSetNoise(float x, float y, float& minY, float& maxY) {
+    float n = Noise2D(0.01f * x, 0.01f * y); //[-1.0, 1.0]
+    noiseData[y][x] = n;
+
+    minY = __min(minY, n);
+    maxY = __max(maxY, n);
 }
 
 vector<int> PerlinNoise::MakePerm()

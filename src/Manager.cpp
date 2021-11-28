@@ -116,6 +116,23 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 #pragma endregion
 
+
+void Manager::RenderLoadingScreen() {
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    shared_ptr<Shape> quad = make_shared<Shape>();
+    quad->loadMesh(RESOURCE_DIR + "quad.obj");
+    quad->init();
+
+    //shared_ptr<Texture> loadmsg = make_shared<Texture>();
+    //loadmsg->setFilename(RESOURCE_DIR + "loading_msg.png");
+    //loadmsg->init();
+    //loadmsg->setUnit(1);
+
+    //shared_ptr<Program> 
+    
+}
+
 void Manager::InitializeShaders()
 {
 	worldprog = make_shared<Program>();
@@ -185,6 +202,7 @@ void Manager::InitializeShaders()
 void Manager::GameLoop(GLFWwindow* _window){
     window = _window;
 
+    RenderLoadingScreen();
     //make B spline basis
     //can change to catmull rom later if needs be
     B[0] = vec4(1.0f, 4.0f, 1.0f, 0.0f);

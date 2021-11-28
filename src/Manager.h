@@ -19,6 +19,7 @@
 #include "Camera.h"
 #include "GLSL.h"
 #include "PerlinNoise.h"
+#include "Texture.h"
 
 //General manager for all game things that need to go between files
 class Manager{
@@ -55,6 +56,7 @@ class Manager{
         bool inMeshCreatorMode = true; //are we in the mesh creation mode?
         bool initTrigger = false; //when true, we do the respective init() function for the scene we're in, then set this back to false.
 
+        void RenderLoadingScreen();
         void InitializeShaders();
         void init_meshcreator();
         void render_meshcreator();
