@@ -1,7 +1,7 @@
 #version 120
 
 attribute vec4 aPos; // in object space
-attribute int aTexInd;
+attribute float aTexInd;
 uniform mat4 P;
 uniform mat4 MV;
 
@@ -9,7 +9,7 @@ uniform vec2 screenSize;
 
 varying vec2 texCoords;
 varying vec3 currPos;
-varying flat int texIndex;
+varying float texIndex;
 
 void main(){
     gl_Position = P * MV * aPos;

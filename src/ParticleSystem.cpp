@@ -13,7 +13,7 @@ void ParticleSystem::draw(std::shared_ptr<MatrixStack> P, std::shared_ptr<Matrix
 	glEnableVertexAttribArray(prog->getAttribute("aTexInd"));
 	glBindBuffer(GL_ARRAY_BUFFER, texIndBufID);
 	glBufferData(GL_ARRAY_BUFFER, texIndBuf.size() * sizeof(int), &texIndBuf[0], GL_DYNAMIC_DRAW);
-	glVertexAttribPointer(prog->getAttribute("aTexInd"), 1, GL_INT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(prog->getAttribute("aTexInd"), 1, GL_FLOAT, GL_FALSE, 0, 0);
 
 
 	glDrawArrays(GL_POINTS, 0, 3 * n);

@@ -22,7 +22,7 @@
 class ParticleSystem {
 private:
 	std::vector<float> posBuf;
-	std::vector<int> texIndBuf;
+	std::vector<float> texIndBuf;
 	GLuint posBufID;
 	GLuint texIndBufID;
 	void InitializeTextureArray();
@@ -47,7 +47,7 @@ public:
 		glGenBuffers(1, &texIndBufID);
 
 		for (int i = 0; i < n; i++) {
-			texIndBuf[i] = rand() % 4;
+			texIndBuf[i] = floor(rand() % 4);
 			std::cerr << texIndBuf[i] << " ";
 		}
 		std::cerr << std::endl;

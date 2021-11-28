@@ -2,7 +2,7 @@
 
 varying vec2 texCoords;
 varying vec3 currPos;
-varying flat int texIndex;
+varying float texIndex;
 uniform sampler2D texA;
 uniform sampler2D texB;
 uniform sampler2D texC;
@@ -14,14 +14,14 @@ void main(){
     //float dist = distance(currPos, startingPos);
     //float alpha = texture2D(tex, gl_PointCoord).r; //idea from L08 where you can
     //gl_FragColor = vec4(1.0, 0.0, 0.0, alpha); //uncomment for red squares
-    if(texIndex == 0){
+    if(texIndex >= 3.0){
+        gl_FragColor = texture2D(texD, gl_PointCoord);
+    }
+    else if(texIndex >= 2.0){
         gl_FragColor = texture2D(texC, gl_PointCoord);
     }
-    else if(texIndex == 1){
+    else if(texIndex >= 1.0){
         gl_FragColor = texture2D(texB, gl_PointCoord);
-    }
-    else if(texIndex == 2){
-        gl_FragColor = texture2D(texC, gl_PointCoord);
     }
     else{
         gl_FragColor = texture2D(texA, gl_PointCoord);
