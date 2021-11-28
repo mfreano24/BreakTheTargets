@@ -13,16 +13,14 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-
-
 #include "MatrixStack.h"
 #include "Shape.h"
 #include "Program.h"
 #include "Camera.h"
 #include "GLSL.h"
-#include "Point.h"
+#include "PerlinNoise.h"
 
-//General manager for all game things that need to go between
+//General manager for all game things that need to go between files
 class Manager{
     public:
         #pragma region SingletonImplementation
@@ -80,7 +78,13 @@ class Manager{
         std::shared_ptr<Shape> noiseMesh;
         std::shared_ptr<Shape> skybox;
 
-        std::vector<std::vector<glm::vec3>> pointGrid; //will be 8x8 for a 6x6 grid of surface squares. Thus our perlin noise segments should be 8x8 before offset.
+        std::vector<std::vector<glm::vec3>> pointGrid; //shoot for 100x100 at a very large spline interval
+        std::vector<std::vector<float>> scales;
+        std::shared_ptr<PerlinNoise> perlin;
+        float XZscale = 45.0f;
+        float Yscale = 15.0f;
+        float meshMinY = 0.0f;
+        float meshMaxY = 0.0f;
 
         glm::mat4 B; //basis for (i believe) B-spline?
 
@@ -98,19 +102,25 @@ class Manager{
         float deltaXRot = 0.0f;
         float deltaYRot = 0.0f;
         float deltaZRot = 0.0f;
+        float deltaSpeed = 1.0f;
 
         float pitch_mag = 0.0f;
         float yaw_mag = 0.0f;
         float roll_mag = 0.0f;
         float speed_mag = 0.0f;
 
-        void CalculateTurnAcceleration(float _x, float _y, float _z);
-        void StorePreviousDirection(float _x,float _y, float _z);
-        void UpdateRotation(float _x, float _y, float _z);
+        void CalculateTurnAcceleration(float _x, float _y, float _z, float _s);
+        void StorePreviousDirection(float _x,float _y, float _z, float _s);
+        void UpdateRotation(float _x, float _y, float _z, float _s);
         void DrawHelicopter(std::shared_ptr<MatrixStack> P, std::shared_ptr<MatrixStack> MV, std::shared_ptr<Program> prog, double t);
         void CheckForEnvironmentCollision();
         void PlayerDeath();
-        void FireMissile();
+        
         void DebugRKey();
+        #pragma endregion
+
+        #pragma region Missile
+        void FireMissile();
+        bool missileActive = false;
         #pragma endregion
 };

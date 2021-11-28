@@ -12,7 +12,7 @@ vec3 base_forward, base_right, base_up;
 vec3 heli_forward, heli_right, heli_up;
 mat4 R;
 shared_ptr<MatrixStack> heli_stack;
-float HVEL = 0.5f;
+float HVEL = 5.0f;
 
 float heli_yaw = 0.0f;
 float heli_pitch = 0.0f;
@@ -26,7 +26,7 @@ vec3 prev_forward; //this is for debugging
 
 double t, dt, prev_t;
 
-float prev_pitch = 0.0f, prev_yaw = 0.0f, prev_roll = 0.0f;
+float prev_pitch = 0.0f, prev_yaw = 0.0f, prev_roll = 0.0f, prev_speed = 0.5f;
 
 shared_ptr<ParticleSystem> ps;
 
@@ -69,7 +69,7 @@ void Manager::DebugRKey() {
 
 #pragma region RotationChecks
 
-void Manager::CalculateTurnAcceleration(float _x, float _y, float _z) {
+void Manager::CalculateTurnAcceleration(float _x, float _y, float _z, float _s) {
 	
 	if (abs(_x) > 0.0f && pitch_mag < 1.0f) {
 		pitch_mag += dt;
@@ -110,6 +110,19 @@ void Manager::CalculateTurnAcceleration(float _x, float _y, float _z) {
 		}
 	}
 
+	if (abs(_s) > 0.0f && speed_mag < 1.0f) {
+		speed_mag +=  0.5f * dt;
+		if (speed_mag > 1.0f) {
+			speed_mag = 1.0f;
+		}
+	}
+	else if (_s == 0.0f && speed_mag > 0.0f) {
+		speed_mag -= dt;
+		if (speed_mag < 0.0f) {
+			speed_mag = 0.0f;
+		}
+	}
+
 	//if the current rpy's sign doesnt match prev_rpy's sign, then we can reset the mag to 0 (switch in direction)
 	if (_x * prev_pitch < 0.0f) {
 		pitch_mag = 0.0f;
@@ -123,9 +136,13 @@ void Manager::CalculateTurnAcceleration(float _x, float _y, float _z) {
 		roll_mag = 0.0f;
 	}
 
+	//dont need to do it for speed, since there's no "signage" here
+
+
+
 }
 
-void Manager::StorePreviousDirection(float _x, float _y, float _z) {
+void Manager::StorePreviousDirection(float _x, float _y, float _z, float _s) {
 	if (_x != 0.0f) {
 		prev_pitch = _x;
 	}
@@ -137,16 +154,21 @@ void Manager::StorePreviousDirection(float _x, float _y, float _z) {
 	if (_z != 0.0f) {
 		prev_roll = _z;
 	}
+
+	if (_s != 0.0f) {
+		prev_speed = _s;
+	}
 }
 
-void Manager::UpdateRotation(float _x, float _y, float _z) {
+void Manager::UpdateRotation(float _x, float _y, float _z, float _s) {
 	if (isDead) {
 		_x = 0.0f;
 		_y = 0.0f;
 		_z = 0.0f;
+		_s = 0.0f;
 	}
-	CalculateTurnAcceleration(_x, _y, _z);
-	StorePreviousDirection(_x, _y, _z);
+	CalculateTurnAcceleration(_x, _y, _z, _s);
+	StorePreviousDirection(_x, _y, _z, _s);
 	//maintain speed until we hit 0
 	//override a lack of input?
 	if (_x == 0.0f && pitch_mag > 0.0f) {
@@ -160,10 +182,15 @@ void Manager::UpdateRotation(float _x, float _y, float _z) {
 	if (_z == 0.0f && roll_mag > 0.0f) {
 		_z = prev_roll;
 	}
+	
+	if (_s == 0.0f && speed_mag > 0.0f) {
+		_s = prev_speed;
+	}
 
 	_x *= pitch_mag;
 	_y *= yaw_mag;
 	_z *= roll_mag;
+	_s *= speed_mag;
 
 	//update the helicopter's total pitch
 	heli_pitch += _x;
@@ -173,6 +200,8 @@ void Manager::UpdateRotation(float _x, float _y, float _z) {
 
 	//update the helicopter's total roll
 	heli_roll += _z;
+
+	HVEL = _s;
 
 	
 	//angle wrapping so they remain in the range 0, 2pi
@@ -227,12 +256,32 @@ void Manager::CheckForEnvironmentCollision() {
 	float currZ = heli_position.z;
 
 	//get the height of the mesh here
-	float meshHeight = 0.0f; //TODO - actually figure this out. woweee.
+	//get closest to pointgrid
+	int lowerX = (int)floor(currX / XZscale);
+	int lowerY = (int)floor(currZ / XZscale);
+
+	int upperX = (int)ceil(currX / XZscale);
+	int upperY = (int)ceil(currZ / XZscale);
+
+	if (upperX >= pointGrid.size() || upperY >= pointGrid.size() ||
+		lowerX < 0 || lowerY < 0 ||  isDead) {
+		return; //we cant get anything from this.
+	}
+
+	float xf = (currX / XZscale) - lowerX;
+	float yf = (currZ / XZscale) - lowerY;
+
+	float reasonable_y = __min(__min(pointGrid[upperX][upperY].y, pointGrid[upperX][lowerY].y),
+		__min(pointGrid[lowerX][upperY].y, pointGrid[lowerX][lowerY].y));
+
+	//cerr << heli_position.y << " ??? " << reasonable_y << endl;
+
+	float meshHeight = reasonable_y; //TODO - actually figure this out. woweee.
 
 	if (heli_position.y <= meshHeight) {
 		//die
-		ps->PlayAt(heli_position);
-		exit(0);
+		PlayerDeath();
+		
 	}
 }
 
@@ -288,7 +337,11 @@ void Manager::init_helicopter(){
 	camera = make_shared<Camera>();
 
 	//initialize helicopter
-	heli_position = vec3(1000.0f, 100.0f, 1000.0f);
+	int appxX = 1;
+	int appxY = 1;
+
+	//cerr << "supposed current height = " << pointGrid[appxX][appxY].y << endl;
+	heli_position = pointGrid[appxX][appxY] + vec3(0.0f, 100.0f, 0.0f);
 	heli_rotation = vec3(0.0f, 0.0f, 0.0f);
 
 	base_forward = vec3(0.0f, 0.0f, 1.0f); //+Z is forward initially
@@ -344,7 +397,7 @@ void Manager::render_helicopter(){
 		resetTimer += dt;
 		if (resetTimer > 1.5f) {
 			
-			heli_position = vec3(1000.0f, 100.0f, 1000.0f);
+			heli_position = pointGrid[1][1] + vec3(0.0f, 100.0f, 0.0f);
 			HVEL = 0.5f;
 			camera_distance = 5.0f;
 			heli_forward = base_forward;
@@ -381,7 +434,7 @@ void Manager::render_helicopter(){
 	auto P = make_shared<MatrixStack>();
 	auto MV = make_shared<MatrixStack>();
 
-	UpdateRotation(deltaXRot, deltaYRot, deltaZRot);
+	UpdateRotation(deltaXRot, deltaYRot, deltaZRot, deltaSpeed);
 
 	
 	// Apply camera transforms
@@ -445,7 +498,8 @@ void Manager::render_helicopter(){
 	glUniformMatrix4fv(worldprog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
 	glUniformMatrix4fv(worldprog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
 	glUniformMatrix4fv(worldprog->getUniform("V"), 1, GL_FALSE, value_ptr(glm::inverse(glm::transpose(MV->topMatrix()))));
-	glUniform3f(worldprog->getUniform("kd"), 0.5f, 0.5f, 1.0f);
+	
+	glUniform2f(worldprog->getUniform("h"), meshMinY, meshMaxY);
 
 	noiseMesh->draw(worldprog);
 

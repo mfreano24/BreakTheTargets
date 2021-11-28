@@ -7,6 +7,8 @@ using namespace glm;
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <chrono>
+
 #pragma region Callbacks
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -68,8 +70,13 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 	}
 
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-        
+        //speed
+        Manager::Instance().deltaSpeed = 5.0f;
     }
+	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
+		//speed
+        Manager::Instance().deltaSpeed = 1.0f;
+	}
 
 
     #pragma endregion
@@ -119,7 +126,7 @@ void Manager::InitializeShaders()
 	worldprog->addUniform("P");
 	worldprog->addUniform("MV");
     worldprog->addUniform("V");
-	worldprog->addUniform("kd");
+    worldprog->addUniform("h"); //height
 	worldprog->addAttribute("aPos");
 	worldprog->addAttribute("aNor");
 	worldprog->setVerbose(false);
@@ -272,75 +279,38 @@ unsigned int Manager::LoadCubeMap(){
 
 void Manager::UpdateNoiseMesh(){
     //TODO: get perlin noise data here
-    int controlRows = 35;
+    int controlRows = 250;
     //cerr << "running update noise mesh" << endl;
     //loop through and make new points
+	auto start = chrono::high_resolution_clock::now();
+    perlin = make_shared<PerlinNoise>(controlRows);
+	auto finish = chrono::high_resolution_clock::now();
+
+	auto s = chrono::duration_cast<chrono::milliseconds>(finish - start);
+
+    cerr << "TIME TAKEN TO MAKE NOISE: " << s.count() << "ms" << endl;
+    
     pointGrid = vector<vector<vec3>>(controlRows, vector<vec3>(controlRows, vec3(0.0f))); //clear the pointgrid and make it all (0,0,0).
-    float debugYmax = -FLT_MAX, debugYmin = FLT_MAX;
-    float debugXmax = -FLT_MAX, debugXmin = FLT_MAX;
-    float debugZmax = -FLT_MAX, debugZmin = FLT_MAX;
+    scales = vector<vector<float>>(controlRows, vector<float>(controlRows, 0.0f));
+    meshMinY = FLT_MAX;
+    meshMaxY = -FLT_MAX;
     for(int x = 0; x < controlRows; x++){
         for(int y = 0; y < controlRows; y++){
-            //add perlin height to gridpoints
-            float randomX = ((float)rand()) / (float)RAND_MAX;
-            float randomY = ((float)rand()) / (float)RAND_MAX;
-			float randomZ = ((float)rand()) / (float)RAND_MAX;
-            //set the scale here so we can 
-            pointGrid[x][y] = vec3((float)x + randomX * 1.0f - 0.5f, 0.0f, (float)y + randomZ * 1.0f - 0.5f);
+            pointGrid[x][y] = XZscale * vec3(x, 0.0f, y);
             
-            
-            
-            pointGrid[x][y].y = randomY * 3.0f - 1.5f;
-
-            pointGrid[x][y].x *= 100.0f; //scale here so we can coincide our helicopter's position with a position on the mesh!
-            pointGrid[x][y].z *= 100.0f;
-            pointGrid[x][y].y *= 30.0f;
-
-            //only check the grid points, as every value on the splines will be something inbetween those.
-            if (pointGrid[x][y].y < debugYmin) {
-                debugYmin = pointGrid[x][y].y;
-            }
-
-			if (pointGrid[x][y].y > debugYmax) {
-                debugYmax = pointGrid[x][y].y;
-			}
-            
-
-			if (pointGrid[x][y].x < debugXmin) {
-                debugXmin = pointGrid[x][y].x;
-			}
-
-			if (pointGrid[x][y].x > debugXmax) {
-                debugXmax = pointGrid[x][y].x;
-			}
-
-			if (pointGrid[x][y].z < debugZmin) {
-                debugZmin = pointGrid[x][y].z;
-			}
-
-			if (pointGrid[x][y].z > debugZmax) {
-				debugZmax = pointGrid[x][y].z;
-			}
+            float variedScale = __max(5.0f, Yscale + 100.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
+            pointGrid[x][y].y = variedScale * perlin->noiseData[x][y] + 0.0f;
         }
     }
 
-    cerr << endl << "X x Y x Z: " << endl << "[" << debugXmin << ", " << debugXmax << "] x [" << debugYmin << ", " << debugYmax <<
-        "] x [" << debugZmin << ", " << debugZmax << "]" << endl;
-
-    bool createIndBuf = false;
-    //create new mesh
-    if(indBuf.size() == 0){
-        //need to make the index buffer!
-        createIndBuf = true;
-    }
-
-
-    //make triangles with the INNER portion, starting from bottom left
-    //this may literally be a quadruple loop so ill make a separate function for it
-    int indexOffset = 0;
+    //TODO: make some number of worker threads to do this. resize posbuf and norbuf accordingly.
+    //posbuf size = 72 * controlRows - 3
+    int n = 72 * (controlRows - 3); //number of points * 3 * number of surfaces we're creating here.
+    int currSurface = 0;
     for(int x = 1; x <= controlRows - 3; x++){
         for(int y = 1; y <= controlRows - 3; y++){
-            indexOffset = CreateTrianglesForSurface(x,y, indexOffset, createIndBuf);
+            CreateTrianglesForSurface(x,y, currSurface, false);
+            currSurface++;
         }
     }
 
@@ -357,8 +327,6 @@ vector<vector<vec3>> Manager::GenerateControlPoints(int baseX, int baseY){
         vector<vec3> curr;
         for(int y = baseY - 1; y <= baseY + 2; y++){
             curr.push_back(pointGrid[x][y]);
-            //cerr << pointGrid[x][y].x << ", " << pointGrid[x][y].y << ", " << pointGrid[x][y].z << endl;
-            //cerr << "point " << x << ", " << y << endl;
         }
         //cerr << endl << endl;
         ret.push_back(curr);
@@ -383,15 +351,6 @@ vec3 Manager::CalculatePoint(vector<vector<vec3>>& cpoints, int x, int y, float 
         Gx[i] = vec4(cpoints[0][i].x, cpoints[1][i].x, cpoints[2][i].x, cpoints[3][i].x);
         Gy[i] = vec4(cpoints[0][i].y, cpoints[1][i].y, cpoints[2][i].y, cpoints[3][i].y);
         Gz[i] = vec4(cpoints[0][i].z, cpoints[1][i].z, cpoints[2][i].z, cpoints[3][i].z);
-
-        
-
-        /*
-        cerr << cpoints[0][i].x << ", " << cpoints[0][i].y << ", " << cpoints[0][i].z << endl;
-        cerr << cpoints[1][i].x << ", " << cpoints[1][i].y << ", " << cpoints[1][i].z << endl;
-        cerr << cpoints[2][i].x << ", " << cpoints[2][i].y << ", " << cpoints[2][i].z << endl;
-        cerr << cpoints[3][i].x << ", " << cpoints[3][i].y << ", " << cpoints[3][i].z << endl;
-        */
     }
     //cerr << endl;
 
@@ -413,22 +372,31 @@ vec3 Manager::CalculatePoint(vector<vector<vec3>>& cpoints, int x, int y, float 
 }
 
 
+
+float RNGMountain() {
+	float rng = round(rand() % 10000 + 1);
+	float addit_height = 0.0f;
+	//cerr << "RNG: " << rng << endl;
+	if (rng <= 5.0f) {
+		addit_height += 250.0f;
+	}
+    return addit_height;
+}
+
 int Manager::CreateTrianglesForSurface(int x, int y, int indexOffset, bool isCreateInd){
     //cerr << "making triangles for the mesh @ " << x << ", " << y << endl;
     vector<vector<vec3>> Points = GenerateControlPoints(x,y);
-    
-    for(float u = 0.0f; u < 1.0f; u+=0.1f){
-        for(float v = 0.0f; v < 1.0f; v+=0.1f){
+    float interval = 0.5f;
+    for(float u = 0.0f; u < 1.0f; u+=interval){
+        for(float v = 0.0f; v < 1.0f; v+= interval){
             //Calculating the 4 points in the square
             vec3 bot_left = CalculatePoint(Points, x, y, u, v);
-            vec3 bot_right = CalculatePoint(Points, x, y, u + 0.1f, v);
-            vec3 top_left = CalculatePoint(Points, x, y, u, v + 0.1f);
-            vec3 top_right = CalculatePoint(Points, x, y, u + 0.1f, v + 0.1f);
+            vec3 bot_right = CalculatePoint(Points, x, y, u + interval, v);
+            vec3 top_left = CalculatePoint(Points, x, y, u, v + interval);
+            vec3 top_right = CalculatePoint(Points, x, y, u + interval, v + interval);
             
-            //cerr << "FOR u = " << x + u << " AND v = " << y + v << endl;
-            //cerr << "square:\n" << top_left.x << ", " << top_left.y << ", " << top_left.z << "\t -- \t" << top_right.x << ", " << top_right.y << ", " << top_right.z << endl;
-            //cerr << bot_left.x << ", " << bot_left.y << ", " << bot_left.z << "\t -- \t" << bot_right.x << ", " << bot_right.y << ", " << bot_right.z << endl << endl;
-            
+			meshMinY = __min(meshMinY, __min(__min(bot_left.y, bot_right.y), __min(top_left.y, top_right.y)));
+			meshMaxY = __max(meshMaxY, __max(__max(bot_left.y, bot_right.y), __max(top_left.y, top_right.y)));
 
             //assert(false);
             //tri 1
@@ -458,7 +426,6 @@ int Manager::CreateTrianglesForSurface(int x, int y, int indexOffset, bool isCre
 			posBuf.push_back(top_right.x);
 			posBuf.push_back(top_right.y);
 			posBuf.push_back(top_right.z);
-            
 
             
 
@@ -492,6 +459,9 @@ int Manager::CreateTrianglesForSurface(int x, int y, int indexOffset, bool isCre
 
         }
     }
+
+    //meshMaxY -= 250.0f;
+   // cerr << "minmax = [" << meshMinY << ", " << meshMaxY << "]" << endl;
 
     return indexOffset;
 }

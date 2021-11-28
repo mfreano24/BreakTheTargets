@@ -1,4 +1,5 @@
 #include "Manager.h"
+#include <thread>
 using namespace std;
 using namespace glm;
 

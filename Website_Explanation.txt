@@ -1,0 +1,5 @@
+TargetBreaker
+
+- generating the terrain
+
+For the terrain, I opted to use a pseudo-Perlin noise, in tandem with spline surface calculations, and other random elements such as creating mountains. While traditional Perlin Noise opts for a very specific set of inputs such as frequency, lacunarity, and octaves, I instead wanted to combine several techniques I know into one system. In doing so, I have managed to create a landscape resembling a series of small islands over the ocean.

@@ -25,6 +25,7 @@ public:
 	void setRotationFactor(float f) { rfactor = f; };
 	void setTranslationFactor(float f) { tfactor = f; };
 	void setScaleFactor(float f) { sfactor = f; };
+	void setFOV(float f) { fovy = f; }
 	void mouseClicked(float x, float y, bool shift, bool ctrl, bool alt);
 	void mouseMoved(float x, float y);
 	void applyProjectionMatrix(std::shared_ptr<MatrixStack> P) const;

@@ -1,15 +1,25 @@
 #version 120
-uniform vec3 kd;
+uniform vec2 h;
 varying vec4 vPos;
 void main()
 {
-	float height = vPos.y; //range is -97 to +97 with the randomized noise?
-	vec3 bottomColor = vec3(0.0, 0.0, 0.4);
-	vec3 topColor = vec3(0.0, 0.5, 0.0);
+	float diff = h.y - h.x;
 
-	float alpha = (45 - height)/90;
-
-	vec3 color = alpha * bottomColor + (1 - alpha) * topColor;
+	float alpha = (vPos.y - h.x) / diff;
+	
+	//use alpha to calculate color by step
+	vec3 color = vec3(0.05, 0.0, 0.2); //deep blue
+	if(alpha >= 0.6){
+		//grass
+		color = vec3(0.0, 0.4, 0.0);
+	}
+	else if(alpha >= 0.55){
+		//beach
+		color = vec3(0.902, 0.847, 0.494); //sand
+	}
+	else if(alpha >= 0.2){
+		color = vec3(0.0, 0.0, 0.5);
+	}
 
 	gl_FragColor = vec4(color, 1.0);
 
