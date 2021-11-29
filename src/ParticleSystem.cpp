@@ -113,10 +113,9 @@ void ParticleSystem::InitializeTextureArray()
 
 void ParticleSystem::PlayAt(vec3& _cen)
 {
-	//THIS IS THE INITIALIZATION OF THE PARTICLES, NOT THE ACTUAL RENDERING
 	center = _cen;
 	if (isActive) {
-		return; //TODO: clear the old explosion and play a new one here? dunno yet, hopefully should never have to do this.
+		return; //TODO: clear the old explosion and play a new one here
 	}
 
 
@@ -125,14 +124,10 @@ void ParticleSystem::PlayAt(vec3& _cen)
 	particles.clear();
 
 	for (int i = 0; i < n; i++) {
-		//lets make n particles for now and we can adjust it later.
-		//make a random upwards velocity
 		float rand_x = 2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f;
 		float rand_z = 2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f;
 		float rand_y = 2.0f * ((float)rand() / (float)RAND_MAX) + 1.0f;
-		cerr << "particle direction: " << rand_x << ", " <<  rand_y << ", " << rand_z << endl;
-		//i cannot, for the life of me, understand why gravity is flipped here. am i nuts? maybe.
-		particles.push_back(make_shared<Particle>(vec3(0.0f), vec3(rand_x, rand_y, rand_z), 0, Manager::Instance().RESOURCE_DIR, i));
+		particles.push_back(make_shared<Particle>(vec3(0.0f), 2.5f * normalize(vec3(rand_x, rand_y, rand_z)), 0, Manager::Instance().RESOURCE_DIR, i));
 	}
 
 

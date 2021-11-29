@@ -19,7 +19,11 @@
 #include "Camera.h"
 #include "GLSL.h"
 #include "PerlinNoise.h"
+#include "ParticleSystem.h"
 #include "Texture.h"
+
+class Missile;
+class Target;
 
 //General manager for all game things that need to go between files
 class Manager{
@@ -123,6 +127,9 @@ class Manager{
 
         #pragma region Missile
         void FireMissile();
+        void DestroyMissile();
         bool missileActive = false;
+        std::shared_ptr<Missile> missile;
+        std::vector< std::shared_ptr<Target> > targets;
         #pragma endregion
 };

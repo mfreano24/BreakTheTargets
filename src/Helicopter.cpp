@@ -1,6 +1,7 @@
 #include "Manager.h"
 
-#include "ParticleSystem.h"
+#include "Missile.h"
+#include "Target.h"
 
 using namespace std;
 
@@ -62,8 +63,7 @@ void PrintRMatrix() {
 }
 
 void Manager::DebugRKey() {
-	//repurposing this to a general "press R to debug" function
-	PlayerDeath();
+	FireMissile();
 }
 
 
@@ -247,7 +247,18 @@ void Manager::UpdateRotation(float _x, float _y, float _z, float _s) {
 #pragma endregion
 
 void Manager::FireMissile() {
-	//TODO: implement this, spawn the missile
+	if (missileActive) {
+		ps->PlayAt(missile->pos);
+	}
+
+	missileActive = true;
+	missile->pos = heli_position;
+	missile->forward = heli_forward;
+	missile->left = -heli_right;
+}
+
+void Manager::DestroyMissile() {
+	missileActive = false;
 }
 
 void Manager::CheckForEnvironmentCollision() {
@@ -372,6 +383,8 @@ void Manager::init_helicopter(){
 	back_rotor->loadMesh(RESOURCE_DIR + "helicopter_prop2.obj");
 	back_rotor->init();
 	
+	missile = make_shared<Missile>(vec3(0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), RESOURCE_DIR);
+
 	// If there were any OpenGL errors, this will print something.
 	// You can intersperse this line in your code to find the exact location
 	// of your OpenGL error.
@@ -386,6 +399,15 @@ void Manager::init_helicopter(){
 
 	//particle system init
 	ps = make_shared<ParticleSystem>();
+
+	int nTargets = 1;
+	for (int i = 0; i < nTargets; i++) {
+		vec3 t_position = vec3(200.0f, heli_position.y, 200.0f);
+		targets.push_back(make_shared<Target>(t_position, RESOURCE_DIR));
+	}
+
+	cerr << "targets[0] active = " << targets[0]->active << endl;
+
 }
 
 void Manager::render_helicopter(){
@@ -540,9 +562,35 @@ void Manager::render_helicopter(){
 		MV->popMatrix();
 
 	}
-	
-
 	//prog->unbind();
+	#pragma endregion
+
+	#pragma region Missile
+	if (missileActive) {
+		//step missile in direction
+		missile->pos += 10.0f * normalize(missile->forward);
+		missile->draw(P, MV, prog, t);
+	}
+	#pragma endregion
+
+
+	#pragma region Targets
+	int remaining = 0;
+	for (auto ta : targets) {
+		cerr << "active? " << ta->active << endl;
+		if (ta->active) {
+			remaining++;
+			ta->draw(P, MV, prog, t);
+			if (missileActive) {
+				ta->CheckCollision(missile->pos, ps);
+			}
+		}
+	}
+
+	if (remaining == 0) {
+		//cerr << "all targets gone! exiting..." << endl;
+		//exit(0);
+	}
 	#pragma endregion
 	
 
@@ -552,7 +600,7 @@ void Manager::render_helicopter(){
 	glEnable(GL_POINT_SPRITE);
 
 	if (ps->isActive) {
-		cerr << "Particles Active: dt = " << dt << endl;
+		//cerr << "Particles Active: dt = " << dt << endl;
 		ps->step(dt, P, MV, quadPS, camera_position);
 	}
 
