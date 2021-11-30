@@ -577,7 +577,6 @@ void Manager::render_helicopter(){
 	#pragma region Targets
 	int remaining = 0;
 	for (auto ta : targets) {
-		cerr << "active? " << ta->active << endl;
 		if (ta->active) {
 			remaining++;
 			ta->draw(P, MV, prog, t);
