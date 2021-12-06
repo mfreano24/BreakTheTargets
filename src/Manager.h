@@ -3,6 +3,8 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <thread>
+#include <chrono>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -92,6 +94,9 @@ class Manager{
         float meshMinY = 0.0f;
         float meshMaxY = 0.0f;
 
+        std::pair<float, float> meshXBounds = std::make_pair(0.0f, 0.0f);
+        std::pair<float, float> meshZBounds = std::make_pair(0.0f, 0.0f);
+
         glm::mat4 B; //basis for (i believe) B-spline?
 
         std::set<std::pair<float, float>> debugSet;
@@ -128,8 +133,11 @@ class Manager{
         #pragma region Missile
         void FireMissile();
         void DestroyMissile();
+        
         bool missileActive = false;
         std::shared_ptr<Missile> missile;
         std::vector< std::shared_ptr<Target> > targets;
+
+        void GenerateTargets(); // will add to "targets"
         #pragma endregion
 };

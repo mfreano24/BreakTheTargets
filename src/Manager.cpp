@@ -7,6 +7,8 @@ using namespace glm;
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "UIManager.h"
+
 #include <chrono>
 
 #pragma region Callbacks
@@ -199,6 +201,16 @@ void Manager::InitializeShaders()
     quadPS->setVerbose(false);
 }
 
+
+void UIThreader() {
+    while (1) {
+        UIManager::Instance().renderUI();
+        this_thread::sleep_for(chrono::milliseconds(1));
+    }
+    
+}
+
+
 void Manager::GameLoop(GLFWwindow* _window){
     window = _window;
 
@@ -238,6 +250,10 @@ void Manager::GameLoop(GLFWwindow* _window){
     
     init_meshcreator(); //this should be deprecated but id rather keep the code initializing the mesh itself here
     init_helicopter();
+    UIManager::Instance().init(window, RESOURCE_DIR);
+    
+    thread UIThread(UIThreader); //just let this run i guess
+
     while(!glfwWindowShouldClose(window)) {
 
         render_helicopter();
@@ -312,10 +328,20 @@ void Manager::UpdateNoiseMesh(){
     scales = vector<vector<float>>(controlRows, vector<float>(controlRows, 0.0f));
     meshMinY = FLT_MAX;
     meshMaxY = -FLT_MAX;
+
+    meshXBounds = make_pair(FLT_MAX, -FLT_MAX);
+    meshZBounds = make_pair(FLT_MAX, -FLT_MAX);
+
     for(int x = 0; x < controlRows; x++){
         for(int y = 0; y < controlRows; y++){
             pointGrid[x][y] = XZscale * vec3(x, 0.0f, y);
             
+            meshXBounds.first = __min(meshXBounds.first, pointGrid[x][y].x);
+            meshXBounds.second = __max(meshXBounds.second, pointGrid[x][y].x);
+
+			meshZBounds.first = __min(meshZBounds.first, pointGrid[x][y].z);
+            meshZBounds.second = __max(meshZBounds.second, pointGrid[x][y].z);
+
             float variedScale = __max(5.0f, Yscale + 100.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
             pointGrid[x][y].y = variedScale * perlin->noiseData[x][y] + 0.0f;
         }

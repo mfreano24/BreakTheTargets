@@ -114,9 +114,11 @@ void ParticleSystem::InitializeTextureArray()
 void ParticleSystem::PlayAt(vec3& _cen)
 {
 	center = _cen;
+	/*
 	if (isActive) {
 		return; //TODO: clear the old explosion and play a new one here
 	}
+	*/
 
 
 	isActive = true;

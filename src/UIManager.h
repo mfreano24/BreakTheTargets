@@ -18,7 +18,7 @@
 #include "Program.h"
 #include "Camera.h"
 #include "GLSL.h"
-#include "Point.h"
+#include "Texture.h"
 
 //UI Manager for rendering on the HUD
 class UIManager{
@@ -38,4 +38,30 @@ class UIManager{
         UIManager(UIManager const &) = delete;
         void operator=(UIManager const &) = delete;
         #pragma endregion
+
+        //logistical stuff
+		GLFWwindow* window;
+		std::string RESOURCE_DIR = ""; // Where the resources are loaded from
+
+
+        //data to be loaded
+        std::vector< std::shared_ptr<Texture> > digits;
+
+        std::shared_ptr<Texture> remainingTex; //need to make a rectangle...?
+
+        std::shared_ptr<Texture> reticle;
+
+        std::shared_ptr<Shape> quad;
+
+        std::shared_ptr<Program> textureProg;
+
+        //values for displaying text
+        int remainingTargets = 99;
+
+        void init(GLFWwindow* _win, std::string& rez);
+
+        void renderUI();
+
+        //helpers
+        void DecrementTargets() { remainingTargets--; }
 };

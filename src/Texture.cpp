@@ -42,6 +42,8 @@ void Texture::init()
 	}
 	width = w;
 	height = h;
+
+	
 	
 	// Generate a texture buffer object
 	glGenTextures(1, &tid);
@@ -54,14 +56,21 @@ void Texture::init()
 		format = GL_RGBA;
 	}
 	glTexImage2D(GL_TEXTURE_2D, 0, ncomps, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	
+	
 	// Generate image pyramid
-	glGenerateMipmap(GL_TEXTURE_2D);
+	glGenerateMipmap(GL_TEXTURE_2D); //this is causing a problem...
+	
 	// Set texture wrap modes for the S and T directions
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	
 	// Set filtering mode for magnification and minimification
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+	
 	// Unbind
 	glBindTexture(GL_TEXTURE_2D, 0);
 	// Free image, since the data is now on the GPU

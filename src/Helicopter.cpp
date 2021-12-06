@@ -3,6 +3,8 @@
 #include "Missile.h"
 #include "Target.h"
 
+
+
 using namespace std;
 
 using namespace glm;
@@ -335,6 +337,19 @@ void Manager::DrawHelicopter(shared_ptr<MatrixStack> P, shared_ptr<MatrixStack> 
 	prog->unbind();
 }
 
+void Manager::GenerateTargets() {
+	int nTargets = 99;
+	float rand_x = 0.0f, rand_z = 0.0f;
+	srand(time(NULL));
+	for (int i = 0; i < nTargets; i++) {
+		rand_x = meshXBounds.first + (float)(rand() / (RAND_MAX / (meshXBounds.second - meshXBounds.first)));
+		rand_z = meshZBounds.first + (float)(rand() / (RAND_MAX / (meshZBounds.second - meshZBounds.first)));
+
+		cerr << "target placed @ " << rand_x << ", " << heli_position.y << ", " << rand_z << endl;
+		targets.push_back(make_shared<Target>(vec3(rand_x, heli_position.y, rand_z), RESOURCE_DIR));
+	}
+}
+
 void Manager::init_helicopter(){
     GLSL::checkVersion();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -400,14 +415,18 @@ void Manager::init_helicopter(){
 	//particle system init
 	ps = make_shared<ParticleSystem>();
 
+	/*
 	int nTargets = 1;
 	for (int i = 0; i < nTargets; i++) {
 		vec3 t_position = vec3(200.0f, heli_position.y, 200.0f);
 		targets.push_back(make_shared<Target>(t_position, RESOURCE_DIR));
 	}
 
-	cerr << "targets[0] active = " << targets[0]->active << endl;
+	*/
 
+	GenerateTargets();
+
+	
 }
 
 void Manager::render_helicopter(){
@@ -584,11 +603,6 @@ void Manager::render_helicopter(){
 				ta->CheckCollision(missile->pos, ps);
 			}
 		}
-	}
-
-	if (remaining == 0) {
-		//cerr << "all targets gone! exiting..." << endl;
-		//exit(0);
 	}
 	#pragma endregion
 	
