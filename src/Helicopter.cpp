@@ -472,6 +472,9 @@ void Manager::render_helicopter(){
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 	
+	glEnable(GL_ALPHA_TEST);
+	
+	
 	auto P = make_shared<MatrixStack>();
 	auto MV = make_shared<MatrixStack>();
 

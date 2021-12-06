@@ -55,12 +55,17 @@ class UIManager{
 
         std::shared_ptr<Program> textureProg;
 
+        //posBuf
+        GLuint posBufID;
+        std::vector<float> posBuf;
+
         //values for displaying text
         int remainingTargets = 99;
 
         void init(GLFWwindow* _win, std::string& rez);
 
         void renderUI();
+
 
         //helpers
         void DecrementTargets() { remainingTargets--; }

@@ -25,9 +25,6 @@ void Target::draw(shared_ptr<MatrixStack> P, shared_ptr<MatrixStack> MV, shared_
 	MV->pushMatrix();
 	MV->translate(pos);
 	MV->scale(10.0f);
-	
-	
-	
 	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
 	glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
 	glUniform3f(prog->getUniform("kd"), 1.0f, 0.5f, 0.0f);

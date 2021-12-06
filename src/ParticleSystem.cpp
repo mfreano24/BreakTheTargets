@@ -63,6 +63,8 @@ void ParticleSystem::step(float dt, shared_ptr<MatrixStack> P, shared_ptr<Matrix
 	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
 	glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
 
+
+	cerr << "P[1][1] = " << (P->topMatrix())[1][1] << endl;
 	int width, height;
 	glfwGetWindowSize(Manager::Instance().window, &width, &height);
 	glUniform2f(prog->getUniform("screenSize"), (float)width, (float)height);

@@ -53,6 +53,7 @@ void Texture::init()
 	// Base level is 0, number of channels is 3/4, and border is 0.
 	GLenum format = GL_RGB;
 	if(ncomps == 4) {
+		cerr << filename << " is RGBA!" << endl;
 		format = GL_RGBA;
 	}
 	glTexImage2D(GL_TEXTURE_2D, 0, ncomps, width, height, 0, format, GL_UNSIGNED_BYTE, data);
