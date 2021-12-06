@@ -252,11 +252,12 @@ void Manager::GameLoop(GLFWwindow* _window){
     init_helicopter();
     UIManager::Instance().init(window, RESOURCE_DIR);
     
-    thread UIThread(UIThreader); //just let this run i guess
 
     while(!glfwWindowShouldClose(window)) {
 
         render_helicopter();
+
+        UIManager::Instance().renderUI();
 		
 		// Swap front and back buffers.
 		glfwSwapBuffers(window);
