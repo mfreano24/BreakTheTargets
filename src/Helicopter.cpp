@@ -2,6 +2,7 @@
 
 #include "Missile.h"
 #include "Target.h"
+#include "UIManager.h"
 
 
 
@@ -276,20 +277,24 @@ void Manager::CheckForEnvironmentCollision() {
 	int upperX = (int)ceil(currX / XZscale);
 	int upperY = (int)ceil(currZ / XZscale);
 
+
+	//cerr << "[" << lowerX << ", " << upperX << "] x [" << lowerY << ", " << upperY << "]" <<  endl;
 	if (upperX >= pointGrid.size() || upperY >= pointGrid.size() ||
 		lowerX < 0 || lowerY < 0 ||  isDead) {
 		return; //we cant get anything from this.
 	}
 
-	float xf = (currX / XZscale) - lowerX;
-	float yf = (currZ / XZscale) - lowerY;
+	float v = (currX / XZscale) - lowerX; //u
+	float u = (currZ / XZscale) - lowerY; //v
 
-	float reasonable_y = __min(__min(pointGrid[upperX][upperY].y, pointGrid[upperX][lowerY].y),
-		__min(pointGrid[lowerX][upperY].y, pointGrid[lowerX][lowerY].y));
+	vector<vector<vec3> > cpoints = GenerateControlPoints(lowerX, lowerY);
 
-	//cerr << heli_position.y << " ??? " << reasonable_y << endl;
+	vec3 newPoint = CalculatePoint(cpoints, lowerX, lowerY, u, v);
 
-	float meshHeight = reasonable_y; //TODO - actually figure this out. woweee.
+	float meshHeight = newPoint.y;
+
+	cerr << "mesh height = " << newPoint.y << endl;
+	
 
 	if (heli_position.y <= meshHeight) {
 		//die
@@ -338,7 +343,8 @@ void Manager::DrawHelicopter(shared_ptr<MatrixStack> P, shared_ptr<MatrixStack> 
 }
 
 void Manager::GenerateTargets() {
-	int nTargets = 99;
+	int nTargets = 499;
+	UIManager::Instance().remainingTargets = nTargets;
 	float rand_x = 0.0f, rand_z = 0.0f;
 	srand(time(NULL));
 	for (int i = 0; i < nTargets; i++) {
@@ -592,6 +598,11 @@ void Manager::render_helicopter(){
 		//step missile in direction
 		missile->pos += 10.0f * normalize(missile->forward);
 		missile->draw(P, MV, prog, t);
+
+		//we shouldn't be able to get lucky shots like that.
+		if (distance(missile->pos, heli_position) >= 100.0f) {
+			missileActive = false;
+		}
 	}
 	#pragma endregion
 

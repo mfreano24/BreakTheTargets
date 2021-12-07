@@ -29,6 +29,7 @@ class Missile;
 class Target;
 
 //General manager for all game things that need to go between files
+//^comment written before i did everything in manager lmao
 class Manager{
     public:
         #pragma region SingletonImplementation
