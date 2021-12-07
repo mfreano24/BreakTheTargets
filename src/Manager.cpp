@@ -10,6 +10,8 @@ using namespace glm;
 #include "UIManager.h"
 
 #include <chrono>
+#include <thread>
+
 
 #pragma region Callbacks
 
@@ -312,18 +314,23 @@ unsigned int Manager::LoadCubeMap(){
     return texID;
 }
 
+void CreateTrianglesThreader(int startingRow, int rowSize, int rowsPerThread) {
+    for (int x = startingRow; x < startingRow + rowsPerThread; x++) {
+        for (int y = 1; y <= rowSize - 3; y++) {
+            Manager::Instance().CreateTrianglesForSurface(x, y, 0, false);
+            //this_thread::sleep_for(chrono::microseconds(1)); //sleep
+        }
+    }
+}
+
 void Manager::UpdateNoiseMesh(){
     //TODO: get perlin noise data here
-    int controlRows = 250;
+    int controlRows = 253;
     //cerr << "running update noise mesh" << endl;
     //loop through and make new points
 	auto start = chrono::high_resolution_clock::now();
     perlin = make_shared<PerlinNoise>(controlRows);
-	auto finish = chrono::high_resolution_clock::now();
-
-	auto s = chrono::duration_cast<chrono::milliseconds>(finish - start);
-
-    cerr << "TIME TAKEN TO MAKE NOISE: " << s.count() << "ms" << endl;
+	
     
     pointGrid = vector<vector<vec3>>(controlRows, vector<vec3>(controlRows, vec3(0.0f))); //clear the pointgrid and make it all (0,0,0).
     scales = vector<vector<float>>(controlRows, vector<float>(controlRows, 0.0f));
@@ -350,18 +357,52 @@ void Manager::UpdateNoiseMesh(){
 
     //TODO: make some number of worker threads to do this. resize posbuf and norbuf accordingly.
     //posbuf size = 72 * controlRows - 3
-    int n = 72 * (controlRows - 3); //number of points * 3 * number of surfaces we're creating here.
-    int currSurface = 0;
-    for(int x = 1; x <= controlRows - 3; x++){
-        for(int y = 1; y <= controlRows - 3; y++){
-            CreateTrianglesForSurface(x,y, currSurface, false);
-            currSurface++;
-        }
+    
+    //BE CAREFUL - MAKE SURE TO UNCOMMENT THREAD SLEEP WHEN THIS IS TRUE
+    bool multithread = false;
+    
+    if (multithread) {
+		if ((controlRows - 3) % rowsPerThread != 0) {
+			cerr << "\n Should have control rows divisible by 10 for threading sake :)" << endl;
+			exit(1);
+		}
+		else {
+			cerr << "Creating " << (controlRows - 3) / rowsPerThread << " threads" << endl;
+		}
+		int endX = controlRows - 3;
+
+		meshWorkers.clear();
+		for (int startX = 0; startX <= endX - rowsPerThread; startX += rowsPerThread) {
+			cerr << "i = " << (startX / controlRows) << " worker array size = " << meshWorkers.size() << endl;
+			meshWorkers.push_back(thread(CreateTrianglesThreader, startX, controlRows, rowsPerThread));
+		}
+
+		for (int i = 0; i < meshWorkers.size(); i++) {
+			//thread joins
+			meshWorkers[i].join();
+		}
+
+		cerr << "finished meshWorkers" << endl;
     }
+    else {
+		for (int x = 1; x <= controlRows - 3; x++) {
+			for (int y = 1; y <= controlRows - 3; y++) {
+				CreateTrianglesForSurface(x, y, 0, false);
+			}
+		}
+    }
+   
+    
 
     noiseMesh = make_shared<Shape>();
     noiseMesh->CopyData(posBuf, norBuf);
     noiseMesh->init();
+
+	auto finish = chrono::high_resolution_clock::now();
+
+	auto s = chrono::duration_cast<chrono::milliseconds>(finish - start);
+
+	cerr << "Mesh creation time: " << s.count() << "ms" << endl;
 }
 
 
@@ -432,19 +473,22 @@ int Manager::CreateTrianglesForSurface(int x, int y, int indexOffset, bool isCre
     //cerr << "making triangles for the mesh @ " << x << ", " << y << endl;
     vector<vector<vec3>> Points = GenerateControlPoints(x,y);
     float interval = 0.5f;
+    
     for(float u = 0.0f; u < 1.0f; u+=interval){
         for(float v = 0.0f; v < 1.0f; v+= interval){
             //Calculating the 4 points in the square
+            
             vec3 bot_left = CalculatePoint(Points, x, y, u, v);
             vec3 bot_right = CalculatePoint(Points, x, y, u + interval, v);
             vec3 top_left = CalculatePoint(Points, x, y, u, v + interval);
             vec3 top_right = CalculatePoint(Points, x, y, u + interval, v + interval);
             
+            //tri 1
+			mx.lock();
+			//cerr << "X Y U V = (" << x << ", " << y << ", " << u << ", " << v << ")\n";
 			meshMinY = __min(meshMinY, __min(__min(bot_left.y, bot_right.y), __min(top_left.y, top_right.y)));
 			meshMaxY = __max(meshMaxY, __max(__max(bot_left.y, bot_right.y), __max(top_left.y, top_right.y)));
-
-            //assert(false);
-            //tri 1
+            
             posBuf.push_back(bot_left.x);
             posBuf.push_back(bot_left.y);
             posBuf.push_back(bot_left.z);
@@ -500,10 +544,15 @@ int Manager::CreateTrianglesForSurface(int x, int y, int indexOffset, bool isCre
             norBuf.push_back(0.0f);
             norBuf.push_back(1.0f);
             norBuf.push_back(0.0f);
+
+            mx.unlock();
+            
+
             
 
         }
     }
+    
 
     //meshMaxY -= 250.0f;
    // cerr << "minmax = [" << meshMinY << ", " << meshMaxY << "]" << endl;

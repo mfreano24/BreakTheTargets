@@ -5,6 +5,7 @@
 #include <set>
 #include <thread>
 #include <chrono>
+#include <mutex>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -94,12 +95,18 @@ class Manager{
         float meshMinY = 0.0f;
         float meshMaxY = 0.0f;
 
+        
+
         std::pair<float, float> meshXBounds = std::make_pair(0.0f, 0.0f);
         std::pair<float, float> meshZBounds = std::make_pair(0.0f, 0.0f);
 
         glm::mat4 B; //basis for (i believe) B-spline?
 
         std::set<std::pair<float, float>> debugSet;
+
+        int rowsPerThread = 125;
+        std::vector<std::thread> meshWorkers;
+        std::mutex mx;
         
         void UpdateNoiseMesh();
         //0,0 = bottom left, 3,3 = top right
