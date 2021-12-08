@@ -402,8 +402,6 @@ void Manager::UpdateNoiseMesh(){
 			}
 		}
     }
-   
-    
 
     noiseMesh = make_shared<Shape>();
     noiseMesh->CopyData(posBuf, norBuf);
@@ -415,7 +413,6 @@ void Manager::UpdateNoiseMesh(){
 
 	cerr << "Mesh creation time: " << s.count() << "ms" << endl;
 }
-
 
 vector<vector<vec3>> Manager::GenerateControlPoints(int baseX, int baseY){
     vector<vector<vec3>> ret;

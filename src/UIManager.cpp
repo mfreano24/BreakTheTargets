@@ -26,6 +26,12 @@ void UIManager::init(GLFWwindow* _win, string& rez)
 		digits[i]->setUnit(1); //start at 5?
 	}
 
+	//initialize reticle
+	reticle = make_shared<Texture>();
+	reticle->setFilename(RESOURCE_DIR + "reticle.png");
+	reticle->init();
+	reticle->setUnit(1);
+
 	//initialize texture program for drawing quads with textures
 	textureProg = make_shared<Program>();
 	textureProg->setShaderNames(RESOURCE_DIR + "UI_vert.glsl", RESOURCE_DIR + "UI_frag.glsl");
@@ -102,6 +108,35 @@ void UIManager::renderUI()
 	glEnable(GL_POINT_SPRITE);
 
 	mat4 P = glm::ortho(0, 1, 0, 1, -1, 1);
+	//draw reticle
+	glEnable(GL_BLEND);
+	glDepthMask(GL_FALSE);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	MV->pushMatrix();
+	textureProg->bind();
+	reticle->bind(textureProg->getUniform("tex"));
+	MV->translate(0.5f, 0.4125f, 0.0f);
+	glUniformMatrix4fv(textureProg->getUniform("P"), 1, GL_FALSE, value_ptr(P));
+	glUniformMatrix4fv(textureProg->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
+	glUniform2f(textureProg->getUniform("screenSize"), (float)w, (float)h);
+
+	//posBuf
+	glEnableVertexAttribArray(textureProg->getAttribute("aPos"));
+	glBindBuffer(GL_ARRAY_BUFFER, posBufID);
+	glBufferData(GL_ARRAY_BUFFER, posBuf.size() * sizeof(float), &posBuf[0], GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(textureProg->getAttribute("aPos"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+
+	glDrawArrays(GL_POINTS, 0, 1);
+
+	glDisableVertexAttribArray(textureProg->getAttribute("aPos"));
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	reticle->unbind();
+	textureProg->unbind();
+
+	MV->popMatrix();
+	glDepthMask(GL_TRUE);
+	glDisable(GL_BLEND);
 	int p_index = 0;
 	//cerr << "DIGIT POSITION ROOT: " << digitPositions[0].x << ", " << digitPositions[0].y << ", " << digitPositions[0].z << endl;
 	while (!digs.empty()) {
@@ -114,6 +149,7 @@ void UIManager::renderUI()
 		MV->rotate(-pi<float>()/2.0f, vec3(0.0f, 1.0f, 0.0f));
 		
 		
+
 		glEnable(GL_BLEND);
 		glDepthMask(GL_FALSE);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
