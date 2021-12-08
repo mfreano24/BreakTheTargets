@@ -69,6 +69,7 @@ void ParticleSystem::step(float dt, shared_ptr<MatrixStack> P, shared_ptr<Matrix
 	glfwGetWindowSize(Manager::Instance().window, &width, &height);
 	glUniform2f(prog->getUniform("screenSize"), (float)width, (float)height);
 	glUniform3f(prog->getUniform("startingPos"), (float)center.x, (float)center.y, (float)center.z);
+	glUniform3f(prog->getUniform("kd"), (float)kd.x, (float)kd.y, (float)kd.z);
 
 	draw(P, MV, prog);
 

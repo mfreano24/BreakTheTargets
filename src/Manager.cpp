@@ -191,6 +191,7 @@ void Manager::InitializeShaders()
     quadPS->init();
     quadPS->addUniform("P");
     quadPS->addUniform("MV");
+    quadPS->addUniform("kd");
     quadPS->addUniform("texA");
     quadPS->addUniform("texB");
     quadPS->addUniform("texC");

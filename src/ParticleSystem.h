@@ -38,6 +38,8 @@ public:
 	int n;
 	void PlayAt(glm::vec3& _cen);
 
+	glm::vec3 kd;
+
 	ParticleSystem() : isActive(false), center(glm::vec3(0.0f)), timer(0.0f), n(50) {
 		InitializeTextureArray();
 		posBuf.resize(3 * n);

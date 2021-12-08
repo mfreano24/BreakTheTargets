@@ -85,6 +85,7 @@ void Target::CheckCollision(glm::vec3& missilePos, std::shared_ptr<ParticleSyste
 		//collide!
 		UIManager::Instance().DecrementTargets();
 		active = false;
+		ps->kd = randomColor;
 		ps->PlayAt(pos);
 		Manager::Instance().DestroyMissile();
 	}

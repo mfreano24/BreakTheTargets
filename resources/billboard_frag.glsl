@@ -9,6 +9,8 @@ uniform sampler2D texC;
 uniform sampler2D texD;
 uniform vec3 startingPos;
 
+uniform vec3 kd;
+
 
 void main(){
     //float dist = distance(currPos, startingPos);
@@ -20,11 +22,8 @@ void main(){
     else if(texIndex >= 2.0){
         gl_FragColor = texture2D(texC, gl_PointCoord);
     }
-    else if(texIndex >= 1.0){
-        gl_FragColor = texture2D(texB, gl_PointCoord);
-    }
     else{
-        gl_FragColor = texture2D(texA, gl_PointCoord);
+        gl_FragColor = texture2D(texA, gl_PointCoord) * vec4(kd, 1.0);
     }
 
 

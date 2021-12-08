@@ -256,6 +256,7 @@ void Manager::UpdateRotation(float _x, float _y, float _z, float _s) {
 
 void Manager::FireMissile() {
 	if (missileActive) {
+		ps->kd = vec3(1.0, 0.0, 0.0);
 		ps->PlayAt(missile->pos);
 	}
 
@@ -311,6 +312,7 @@ void Manager::CheckForEnvironmentCollision() {
 void Manager::PlayerDeath() {
 	isDead = true;
 	camera_distance = 100.0f;
+	ps->kd = vec3(1.0, 0.0, 0.0);
 	ps->PlayAt(heli_position + 5.0f * normalize(heli_up));
 	HVEL = 0.0f;
 
