@@ -81,7 +81,7 @@ void Target::draw(shared_ptr<MatrixStack> P, shared_ptr<MatrixStack> MV, shared_
 void Target::CheckCollision(glm::vec3& missilePos, std::shared_ptr<ParticleSystem> ps) {
 	float dist_sq = pow(missilePos.x - pos.x, 2) + pow(missilePos.y - pos.y, 2) + pow(missilePos.z - pos.z, 2);
 	//cerr << "missile pos : " << missilePos.x << ", " << missilePos.y << ", " << missilePos.z << " || " << pos.x << ", " << pos.y << ", " << pos.z << endl;
-	if (dist_sq <= 100.0f) {
+	if (dist_sq <= 110.0f) {
 		//collide!
 		UIManager::Instance().DecrementTargets();
 		active = false;

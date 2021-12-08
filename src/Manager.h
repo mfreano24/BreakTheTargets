@@ -6,6 +6,7 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+#include <semaphore>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -108,6 +109,7 @@ class Manager{
         int rowsPerThread = 125;
         std::vector<std::thread> meshWorkers;
         std::mutex mx;
+        
         
         void UpdateNoiseMesh();
         //0,0 = bottom left, 3,3 = top right

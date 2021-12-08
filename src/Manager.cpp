@@ -352,7 +352,15 @@ void Manager::UpdateNoiseMesh(){
             meshZBounds.second = __max(meshZBounds.second, pointGrid[x][y].z);
 
             float variedScale = __max(5.0f, Yscale + 100.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
-            pointGrid[x][y].y = variedScale * perlin->noiseData[x][y] + 0.0f;
+            float diff = perlin->maxY - perlin->minY;
+            float progress = perlin->noiseData[x][y] - perlin->minY;
+            progress /= diff;
+
+            float addtl = 0.0f;
+            if (perlin->noiseData[x][y] > 0.7f) {
+                addtl += 100.0f;
+            }
+            pointGrid[x][y].y = variedScale * perlin->noiseData[x][y] + addtl;
         }
     }
 
@@ -373,7 +381,7 @@ void Manager::UpdateNoiseMesh(){
 		int endX = controlRows - 3;
 
 		meshWorkers.clear();
-		for (int startX = 0; startX <= endX - rowsPerThread; startX += rowsPerThread) {
+		for (int startX = 1; startX <= endX - rowsPerThread; startX += rowsPerThread) {
 			cerr << "i = " << (startX / controlRows) << " worker array size = " << meshWorkers.size() << endl;
 			meshWorkers.push_back(thread(CreateTrianglesThreader, startX, controlRows, rowsPerThread));
 		}
@@ -385,6 +393,8 @@ void Manager::UpdateNoiseMesh(){
 
 		cerr << "finished meshWorkers" << endl;
     }
+
+
     else {
 		for (int x = 1; x <= controlRows - 3; x++) {
 			for (int y = 1; y <= controlRows - 3; y++) {
@@ -428,7 +438,6 @@ vec3 Manager::CalculatePoint(vector<vector<vec3>>& cpoints, int x, int y, float 
     vec4 uVec = vec4(1, u, (float)u*u, (float)u*u*u);
     vec4 vVec = vec4(1, v, (float)v*v, (float)v*v*v);
     
-    
     //need to make Gx, Gy, Gz.
     mat4 Gx(0.0f);
     mat4 Gy(0.0f);
@@ -452,9 +461,6 @@ vec3 Manager::CalculatePoint(vector<vector<vec3>>& cpoints, int x, int y, float 
     float Py = dot(Bv, GyBu);
     float Pz = dot(Bv, GzBu);
 
-    
-
-    //cerr << "point: " << Px << ", " << Py << ", " << Pz << endl;
     return vec3(Px, Py, Pz);
 }
 
@@ -546,11 +552,10 @@ int Manager::CreateTrianglesForSurface(int x, int y, int indexOffset, bool isCre
             norBuf.push_back(1.0f);
             norBuf.push_back(0.0f);
 
+            //this_thread::sleep_for(chrono::microseconds(1));
             mx.unlock();
-            
 
             
-
         }
     }
     

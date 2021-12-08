@@ -19,7 +19,7 @@ PerlinNoise::PerlinNoise(int _sz){
     noiseData = vector<vector<float> >(sz, vector<float>(sz, 0.0f));
     srand(time(NULL));
     //generating this mess by ourselves
-    float minY = FLT_MAX, maxY = -FLT_MAX;
+    minY = FLT_MAX, maxY = -FLT_MAX;
     for (int y = 0; y < sz; y++) {
         for (int x = 0; x < sz; x++) {
             //TODO: thread this too.

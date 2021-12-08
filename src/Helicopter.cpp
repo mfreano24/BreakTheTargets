@@ -352,14 +352,21 @@ void Manager::DrawHelicopter(shared_ptr<MatrixStack> P, shared_ptr<MatrixStack> 
 void Manager::GenerateTargets() {
 	int nTargets = 500;
 	UIManager::Instance().remainingTargets = nTargets;
-	float rand_x = 0.0f, rand_z = 0.0f, rand_y;
+	float rand_x = 0.0f, rand_z = 0.0f;
 	srand(time(NULL));
 	for (int i = 0; i < nTargets; i++) {
-		rand_x = meshXBounds.first + (float)(rand() / (RAND_MAX / (meshXBounds.second - meshXBounds.first)));
-		rand_z = meshZBounds.first + (float)(rand() / (RAND_MAX / (meshZBounds.second - meshZBounds.first)));
-		rand_y = -10.0 + 50.0f * (float)(rand()) / (float)(RAND_MAX);
-		//cerr << "target placed @ " << rand_x << ", " << heli_position.y << ", " << rand_z << endl;
-		targets.push_back(make_shared<Target>(vec3(rand_x, heli_position.y + rand_y, rand_z), RESOURCE_DIR));
+		rand_x = 2.0f + (float)(rand() / (RAND_MAX / (245.0f - 2.0f)));
+		rand_z = 2.0f + (float)(rand() / (RAND_MAX / (245.0f - 2.0f)));
+		int xi = (int)floor(rand_x), yi = (int)floor(rand_z);
+		float xf = (rand_x) - (float)xi;
+		float yf = (rand_z) - (float)yi;
+		//cerr << "xi: " << xi << " yi: " << yi << " xf " << xf << " yf " << yf << endl;
+		vector<vector<vec3> > cpoints = GenerateControlPoints(xi, yi);
+		
+		float target_y = CalculatePoint(cpoints, xi, yi, xf, yf).y;
+
+		//cerr << "target placed @ " << rand_x << ", " << target_y << ", " << rand_z << endl;
+		targets.push_back(make_shared<Target>(vec3(rand_x * XZscale, target_y + 35.0f, rand_z * XZscale), RESOURCE_DIR));
 	}
 }
 

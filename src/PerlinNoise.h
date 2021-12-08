@@ -15,6 +15,9 @@ class PerlinNoise{
     std::vector<std::vector<float>> noiseData; //noise data, should be sz x sz.
     std::vector<int> Perm; //permutation, to be shuffled
 
+    float minY;
+    float maxY;
+
     PerlinNoise();
     PerlinNoise(int _sz); //noise will be square
     ~PerlinNoise();
