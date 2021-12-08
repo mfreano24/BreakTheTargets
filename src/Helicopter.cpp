@@ -285,8 +285,8 @@ void Manager::CheckForEnvironmentCollision() {
 
 
 	//cerr << "[" << lowerX << ", " << upperX << "] x [" << lowerY << ", " << upperY << "]" <<  endl;
-	if (upperX >= pointGrid.size() || upperY >= pointGrid.size() ||
-		lowerX < 0 || lowerY < 0 ||  isDead) {
+	if (upperX >= pointGrid.size() - 1 || upperY >= pointGrid[0].size() - 1 ||
+		lowerX <= 0 || lowerY <= 0 ||  isDead) {
 		return; //we cant get anything from this.
 	}
 
@@ -383,8 +383,8 @@ void Manager::init_helicopter(){
 	camera = make_shared<Camera>();
 
 	//initialize helicopter
-	int appxX = 1;
-	int appxY = 1;
+	int appxX = 100;
+	int appxY = 100;
 
 	//cerr << "supposed current height = " << pointGrid[appxX][appxY].y << endl;
 	heli_position = pointGrid[appxX][appxY] + vec3(0.0f, 100.0f, 0.0f);
@@ -497,6 +497,7 @@ void Manager::render_helicopter(){
 	
 	auto P = make_shared<MatrixStack>();
 	auto MV = make_shared<MatrixStack>();
+	auto HRot = make_shared<MatrixStack>();
 
 	UpdateRotation(deltaXRot, deltaYRot, deltaZRot, deltaSpeed);
 
@@ -576,6 +577,8 @@ void Manager::render_helicopter(){
 	worldprog->unbind();
 	#pragma endregion
 
+	mat4 heliM;
+	HRot->pushMatrix();
 	#pragma region DrawHelicopter
 	if (!isDead) {
 		MV->pushMatrix();
@@ -602,8 +605,11 @@ void Manager::render_helicopter(){
 		MV->rotate(pitch_mag * pitch_sign * deg, vec3(0.0f, 0.0f, -1.0f));
 		MV->rotate(yaw_mag * yaw_sign * deg, vec3(0.0f, 1.0f, 0.0f));
 		MV->rotate(roll_mag * roll_sign * deg, vec3(1.0f, 0.0f, 0.0f));
-
-
+		
+		HRot->rotate(pitch_mag * pitch_sign * deg, vec3(0.0f, 0.0f, -1.0f));
+		HRot->rotate(yaw_mag * yaw_sign * deg, vec3(0.0f, 1.0f, 0.0f));
+		HRot->rotate(roll_mag * roll_sign * deg, vec3(1.0f, 0.0f, 0.0f));
+		
 		DrawHelicopter(P, MV, prog, t);
 
 		MV->popMatrix();
@@ -616,8 +622,8 @@ void Manager::render_helicopter(){
 	if (missileActive) {
 		//step missile in direction
 		missile->pos += 10.0f * normalize(missile->forward);
-		missile->draw(P, MV, prog, t);
-
+		heliM = HRot->topMatrix();
+		missile->draw(P, MV, prog, t, heliM);
 		//we shouldn't be able to get lucky shots like that.
 		if (distance(missile->pos, heli_position) >= 1000.0f) {
 			missileActive = false;
@@ -625,6 +631,7 @@ void Manager::render_helicopter(){
 	}
 	#pragma endregion
 
+	HRot->popMatrix();
 
 	#pragma region Targets
 	int remaining = 0;

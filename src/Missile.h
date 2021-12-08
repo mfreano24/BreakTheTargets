@@ -13,5 +13,5 @@ public:
 
 	Missile(glm::vec3& _p, glm::vec3& _f, glm::vec3& _l, std::string resource_dir);
 
-	void draw(std::shared_ptr<MatrixStack> P, std::shared_ptr<MatrixStack> MV, std::shared_ptr<Program> prog, double t);
+	void draw(std::shared_ptr<MatrixStack> P, std::shared_ptr<MatrixStack> MV, std::shared_ptr<Program> prog, double t, glm::mat4& heliM);
 };
