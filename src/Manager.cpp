@@ -79,7 +79,7 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     }
 	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
 		//speed
-        Manager::Instance().deltaSpeed = 1.0f;
+        Manager::Instance().deltaSpeed = 0.0f;
 	}
 
 

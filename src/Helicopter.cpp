@@ -195,6 +195,11 @@ void Manager::UpdateRotation(float _x, float _y, float _z, float _s) {
 	_z *= roll_mag;
 	_s *= speed_mag;
 
+
+	float base_fov = 45.0f * pi<float>() / 180.0f;
+	float addt_fov = 5.0f * pi<float>() / 180.0f;
+	camera->setFOV(base_fov + speed_mag * addt_fov);
+
 	//update the helicopter's total pitch
 	heli_pitch += _x;
 
@@ -494,6 +499,9 @@ void Manager::render_helicopter(){
 
 	//PrintHeliVectors();
 	if (!isDead) {
+		if (HVEL < 1.0f) {
+			HVEL = 1.0f;
+		}
 		heli_position += HVEL * heli_forward; //move the helicopter
 	}
 	

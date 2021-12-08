@@ -121,7 +121,7 @@ class Manager{
         float deltaXRot = 0.0f;
         float deltaYRot = 0.0f;
         float deltaZRot = 0.0f;
-        float deltaSpeed = 1.0f;
+        float deltaSpeed = 0.0f;
 
         float pitch_mag = 0.0f;
         float yaw_mag = 0.0f;
