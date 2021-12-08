@@ -55,6 +55,8 @@ class UIManager{
 
         std::shared_ptr<Program> textureProg;
 
+        std::vector<glm::vec3> digitPositions;
+
         //posBuf
         GLuint posBufID;
         std::vector<float> posBuf;

@@ -271,7 +271,7 @@ void Manager::GameLoop(GLFWwindow* _window){
 unsigned int Manager::LoadCubeMap(){
     string folder = RESOURCE_DIR + "skybox_textures/";
     string testing = RESOURCE_DIR + "explosion_particles/help.jpg";
-    cerr << "TESTING: " << testing << endl;
+    //cerr << "TESTING: " << testing << endl;
     unsigned int texID;
     vector<string> faces
     {
@@ -297,7 +297,7 @@ unsigned int Manager::LoadCubeMap(){
             stbi_image_free(data);
         }
         else {
-            cerr << "unable to load " << faces[i] << endl;
+            //cerr << "unable to load " << faces[i] << endl;
             stbi_image_free(data);
             exit(1);
         }

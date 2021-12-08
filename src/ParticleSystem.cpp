@@ -16,7 +16,7 @@ void ParticleSystem::draw(std::shared_ptr<MatrixStack> P, std::shared_ptr<Matrix
 	glVertexAttribPointer(prog->getAttribute("aTexInd"), 1, GL_FLOAT, GL_FALSE, 0, 0);
 
 
-	glDrawArrays(GL_POINTS, 0, 3 * n);
+	glDrawArrays(GL_POINTS, 0, n);
 
 	glDisableVertexAttribArray(prog->getAttribute("aPos"));
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -32,7 +32,7 @@ void ParticleSystem::step(float dt, shared_ptr<MatrixStack> P, shared_ptr<Matrix
 	timer += dt;
 	if (timer > 1.0f) {
 		//do not render, return the function, it is done
-		cerr << "Particles stopped!" << endl;
+		//cerr << "Particles stopped!" << endl;
 		particles.clear();
 		isActive = false;
 		return;
@@ -64,7 +64,7 @@ void ParticleSystem::step(float dt, shared_ptr<MatrixStack> P, shared_ptr<Matrix
 	glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
 
 
-	cerr << "P[1][1] = " << (P->topMatrix())[1][1] << endl;
+	//cerr << "P[1][1] = " << (P->topMatrix())[1][1] << endl;
 	int width, height;
 	glfwGetWindowSize(Manager::Instance().window, &width, &height);
 	glUniform2f(prog->getUniform("screenSize"), (float)width, (float)height);
@@ -128,13 +128,14 @@ void ParticleSystem::PlayAt(vec3& _cen)
 	particles.clear();
 
 	for (int i = 0; i < n; i++) {
-		float rand_x = 2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f;
-		float rand_z = 2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f;
-		float rand_y = 2.0f * ((float)rand() / (float)RAND_MAX) + 1.0f;
+		float rand_x = 10.0f * ((float)rand() / (float)RAND_MAX) - 1.0f;
+		float rand_z = 10.0f * ((float)rand() / (float)RAND_MAX) - 1.0f;
+		float rand_y = 10.0f * ((float)rand() / (float)RAND_MAX) - 1.0f;
 		particles.push_back(make_shared<Particle>(vec3(0.0f), 2.5f * normalize(vec3(rand_x, rand_y, rand_z)), 0, Manager::Instance().RESOURCE_DIR, i));
 	}
 
 
 
 }
+
 

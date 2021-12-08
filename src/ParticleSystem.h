@@ -48,8 +48,6 @@ public:
 
 		for (int i = 0; i < n; i++) {
 			texIndBuf[i] = floor(rand() % 4);
-			std::cerr << texIndBuf[i] << " ";
 		}
-		std::cerr << std::endl;
 	}
 };

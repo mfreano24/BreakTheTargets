@@ -30,7 +30,6 @@ void Texture::init()
 	int w, h, ncomps;
 	stbi_set_flip_vertically_on_load(true);
 	unsigned char *data = stbi_load(filename.c_str(), &w, &h, &ncomps, 0);
-	cerr << "texture loaded: " << filename << endl;
 	if(!data) {
 		cerr << filename << " not found" << endl;
 	}
@@ -53,7 +52,6 @@ void Texture::init()
 	// Base level is 0, number of channels is 3/4, and border is 0.
 	GLenum format = GL_RGB;
 	if(ncomps == 4) {
-		cerr << filename << " is RGBA!" << endl;
 		format = GL_RGBA;
 	}
 	glTexImage2D(GL_TEXTURE_2D, 0, ncomps, width, height, 0, format, GL_UNSIGNED_BYTE, data);

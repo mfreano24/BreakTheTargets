@@ -19,6 +19,6 @@ void main(){
     texIndex = aTexInd;
 
 
-    gl_PointSize = screenSize.y * P[1][1] * 1.0/ gl_Position.w;
+    gl_PointSize = screenSize.y * P[1][1] * 2.0/ gl_Position.w;
 
 }

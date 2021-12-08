@@ -5,7 +5,9 @@ uniform mat4 P;
 uniform mat4 MV;
 uniform mat4 V;
 
-varying vec4 vPos;
+varying vec3 vPos;
+varying vec3 fragPos;
+varying vec3 fragNor;
 
 void main()
 {
@@ -13,7 +15,9 @@ void main()
 	// Camera space:        V * M * aPos
 	// Projected space: P * V * M * aPos
 	vec4 posCamera = MV * aPos;
-	vec4 norCamera = MV * vec4(aNor, 0.0);
+	vec3 norCamera = mat3(V) * aNor;
 	gl_Position = P * posCamera;
-	vPos = aPos;
+	vPos = aPos.xyz;
+	fragPos = posCamera.xyz;
+	fragNor = normalize(norCamera);
 }

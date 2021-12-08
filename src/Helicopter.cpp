@@ -293,7 +293,7 @@ void Manager::CheckForEnvironmentCollision() {
 
 	float meshHeight = newPoint.y;
 
-	cerr << "mesh height = " << newPoint.y << endl;
+	//cerr << "mesh height = " << newPoint.y << endl;
 	
 
 	if (heli_position.y <= meshHeight) {
@@ -305,8 +305,8 @@ void Manager::CheckForEnvironmentCollision() {
 
 void Manager::PlayerDeath() {
 	isDead = true;
-	camera_distance = 20.0f;
-	ps->PlayAt(heli_position);
+	camera_distance = 100.0f;
+	ps->PlayAt(heli_position + 5.0f * normalize(heli_up));
 	HVEL = 0.0f;
 
 }
@@ -343,16 +343,16 @@ void Manager::DrawHelicopter(shared_ptr<MatrixStack> P, shared_ptr<MatrixStack> 
 }
 
 void Manager::GenerateTargets() {
-	int nTargets = 499;
+	int nTargets = 500;
 	UIManager::Instance().remainingTargets = nTargets;
-	float rand_x = 0.0f, rand_z = 0.0f;
+	float rand_x = 0.0f, rand_z = 0.0f, rand_y;
 	srand(time(NULL));
 	for (int i = 0; i < nTargets; i++) {
 		rand_x = meshXBounds.first + (float)(rand() / (RAND_MAX / (meshXBounds.second - meshXBounds.first)));
 		rand_z = meshZBounds.first + (float)(rand() / (RAND_MAX / (meshZBounds.second - meshZBounds.first)));
-
-		cerr << "target placed @ " << rand_x << ", " << heli_position.y << ", " << rand_z << endl;
-		targets.push_back(make_shared<Target>(vec3(rand_x, heli_position.y, rand_z), RESOURCE_DIR));
+		rand_y = -10.0 + 50.0f * (float)(rand()) / (float)(RAND_MAX);
+		//cerr << "target placed @ " << rand_x << ", " << heli_position.y << ", " << rand_z << endl;
+		targets.push_back(make_shared<Target>(vec3(rand_x, heli_position.y + rand_y, rand_z), RESOURCE_DIR));
 	}
 }
 
@@ -444,7 +444,7 @@ void Manager::render_helicopter(){
 		resetTimer += dt;
 		if (resetTimer > 1.5f) {
 			
-			heli_position = pointGrid[1][1] + vec3(0.0f, 100.0f, 0.0f);
+			heli_position = pointGrid[100][100] + vec3(0.0f, 100.0f, 0.0f);
 			HVEL = 0.5f;
 			camera_distance = 5.0f;
 			heli_forward = base_forward;
@@ -493,8 +493,10 @@ void Manager::render_helicopter(){
 	MV->pushMatrix();
 
 	//PrintHeliVectors();
-
-	heli_position += HVEL * heli_forward; //move the helicopter
+	if (!isDead) {
+		heli_position += HVEL * heli_forward; //move the helicopter
+	}
+	
 	
 	CheckForEnvironmentCollision();
 
@@ -600,7 +602,7 @@ void Manager::render_helicopter(){
 		missile->draw(P, MV, prog, t);
 
 		//we shouldn't be able to get lucky shots like that.
-		if (distance(missile->pos, heli_position) >= 100.0f) {
+		if (distance(missile->pos, heli_position) >= 1000.0f) {
 			missileActive = false;
 		}
 	}
