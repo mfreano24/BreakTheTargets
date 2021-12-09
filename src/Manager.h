@@ -97,8 +97,6 @@ class Manager{
         float meshMinY = 0.0f;
         float meshMaxY = 0.0f;
 
-        
-
         std::pair<float, float> meshXBounds = std::make_pair(0.0f, 0.0f);
         std::pair<float, float> meshZBounds = std::make_pair(0.0f, 0.0f);
 
@@ -110,7 +108,7 @@ class Manager{
         std::vector<std::thread> meshWorkers;
         std::mutex mx;
         
-        
+        int controlRows = 53;
         void UpdateNoiseMesh();
         //0,0 = bottom left, 3,3 = top right
         std::vector<std::vector<glm::vec3>> GenerateControlPoints(int baseX, int baseY);
@@ -146,6 +144,10 @@ class Manager{
         
         bool missileActive = false;
         std::shared_ptr<Missile> missile;
+
+        int ms_index = 0;
+        std::vector< std::shared_ptr<Missile> > missileVec;
+        std::vector< bool > ms_active;
         std::vector< std::shared_ptr<Target> > targets;
 
         void GenerateTargets(); // will add to "targets"

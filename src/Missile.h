@@ -3,6 +3,7 @@
 
 class Missile {
 public:
+	bool active = false;
 	glm::vec3 pos;
 	glm::vec3 forward;
 	glm::vec3 left;

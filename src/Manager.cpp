@@ -326,7 +326,6 @@ void CreateTrianglesThreader(int startingRow, int rowSize, int rowsPerThread) {
 
 void Manager::UpdateNoiseMesh(){
     //TODO: get perlin noise data here
-    int controlRows = 253;
     //cerr << "running update noise mesh" << endl;
     //loop through and make new points
 	auto start = chrono::high_resolution_clock::now();
@@ -334,7 +333,7 @@ void Manager::UpdateNoiseMesh(){
 	
     
     pointGrid = vector<vector<vec3>>(controlRows, vector<vec3>(controlRows, vec3(0.0f))); //clear the pointgrid and make it all (0,0,0).
-    scales = vector<vector<float>>(controlRows, vector<float>(controlRows, 0.0f));
+    //scales = vector<vector<float>>(controlRows, vector<float>(controlRows, 0.0f));
     meshMinY = FLT_MAX;
     meshMaxY = -FLT_MAX;
 
@@ -393,6 +392,7 @@ void Manager::UpdateNoiseMesh(){
 
 		cerr << "finished meshWorkers" << endl;
     }
+
 
 
     else {

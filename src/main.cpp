@@ -36,11 +36,12 @@ static void error_callback(int error, const char *description)
 
 int main(int argc, char **argv)
 {
-	if(argc < 2) {
-		cout << "Please specify the resource directory." << endl;
+	if(argc < 3) {
+		cout << "USAGE: ./Balloons <Resource Directory> <# of Control Point Rows>" << endl;
 		return 0;
 	}
 	RESOURCE_DIR = argv[1] + string("/");
+	int nBalloons = atoi(argv[2]);
 	
 	// Set error callback.
 	glfwSetErrorCallback(error_callback);
@@ -67,6 +68,7 @@ int main(int argc, char **argv)
 	cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 	
 	Manager::Instance().RESOURCE_DIR = RESOURCE_DIR; //set the resource directory.
+	Manager::Instance().controlRows = nBalloons;
 	Manager::Instance().GameLoop(window); //call the loop.
 	
 	// Quit program.

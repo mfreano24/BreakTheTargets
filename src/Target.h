@@ -30,6 +30,6 @@ public:
 	glm::vec3 CalculatePosition(double t);
 
 	void draw(std::shared_ptr<MatrixStack> P, std::shared_ptr<MatrixStack> MV, std::shared_ptr<Program> prog, double t);
-	void CheckCollision(glm::vec3& _missilePos, std::shared_ptr<ParticleSystem> ps);
+	bool CheckCollision(glm::vec3& _missilePos, std::shared_ptr<ParticleSystem> ps);
 };
 

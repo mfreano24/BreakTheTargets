@@ -255,15 +255,12 @@ void Manager::UpdateRotation(float _x, float _y, float _z, float _s) {
 #pragma endregion
 
 void Manager::FireMissile() {
-	if (missileActive) {
-		ps->kd = vec3(1.0, 0.0, 0.0);
-		ps->PlayAt(missile->pos);
-	}
-
-	missileActive = true;
-	missile->pos = heli_position;
-	missile->forward = heli_forward;
-	missile->left = -heli_right;
+	cerr << "ms_index = " << ms_index << endl;
+	missileVec[ms_index]->active = true;
+	missileVec[ms_index]->pos = heli_position;
+	missileVec[ms_index]->forward = heli_forward;
+	missileVec[ms_index]->left = -heli_right;
+	ms_index = (ms_index + 1) % missileVec.size();
 }
 
 void Manager::DestroyMissile() {
@@ -272,6 +269,7 @@ void Manager::DestroyMissile() {
 
 void Manager::CheckForEnvironmentCollision() {
 	//check if the helicopter has collided with the environment
+	
 	float currX = heli_position.x;
 	float currZ = heli_position.z;
 
@@ -350,13 +348,14 @@ void Manager::DrawHelicopter(shared_ptr<MatrixStack> P, shared_ptr<MatrixStack> 
 }
 
 void Manager::GenerateTargets() {
-	int nTargets = 500;
+	int nTargets = controlRows / 2;
 	UIManager::Instance().remainingTargets = nTargets;
 	float rand_x = 0.0f, rand_z = 0.0f;
 	srand(time(NULL));
 	for (int i = 0; i < nTargets; i++) {
-		rand_x = 2.0f + (float)(rand() / (RAND_MAX / (245.0f - 2.0f)));
-		rand_z = 2.0f + (float)(rand() / (RAND_MAX / (245.0f - 2.0f)));
+		float max_xz = (float)(controlRows - 10.0f);
+		rand_x = 10.0f + (float)(rand() / (RAND_MAX / (max_xz - 10.0f)));
+		rand_z = 10.0f + (float)(rand() / (RAND_MAX / (max_xz - 10.0f)));
 		int xi = (int)floor(rand_x), yi = (int)floor(rand_z);
 		float xf = (rand_x) - (float)xi;
 		float yf = (rand_z) - (float)yi;
@@ -383,8 +382,10 @@ void Manager::init_helicopter(){
 	camera = make_shared<Camera>();
 
 	//initialize helicopter
-	int appxX = 100;
-	int appxY = 100;
+	int appxX = (controlRows - 3)/2;
+	int appxY = appxX;
+
+	
 
 	//cerr << "supposed current height = " << pointGrid[appxX][appxY].y << endl;
 	heli_position = pointGrid[appxX][appxY] + vec3(0.0f, 100.0f, 0.0f);
@@ -397,6 +398,7 @@ void Manager::init_helicopter(){
 	heli_forward = vec3(0.0f, 0.0f, 1.0f);
 	heli_right = vec3(-1.0f, 0.0f, 0.0f);
 	heli_up = vec3(0.0f, 1.0f, 0.0f);
+
 
 	// Initialize time.
 	glfwSetTime(0.0);
@@ -418,7 +420,9 @@ void Manager::init_helicopter(){
 	back_rotor->loadMesh(RESOURCE_DIR + "helicopter_prop2.obj");
 	back_rotor->init();
 	
-	missile = make_shared<Missile>(vec3(0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), RESOURCE_DIR);
+	for (int i = 0; i < 5; i++) {
+		missileVec.push_back(make_shared<Missile>(vec3(0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), RESOURCE_DIR));
+	}
 
 	// If there were any OpenGL errors, this will print something.
 	// You can intersperse this line in your code to find the exact location
@@ -435,15 +439,6 @@ void Manager::init_helicopter(){
 	//particle system init
 	ps = make_shared<ParticleSystem>();
 
-	/*
-	int nTargets = 1;
-	for (int i = 0; i < nTargets; i++) {
-		vec3 t_position = vec3(200.0f, heli_position.y, 200.0f);
-		targets.push_back(make_shared<Target>(t_position, RESOURCE_DIR));
-	}
-
-	*/
-
 	GenerateTargets();
 
 	
@@ -457,8 +452,9 @@ void Manager::render_helicopter(){
 	if (isDead) {
 		resetTimer += dt;
 		if (resetTimer > 1.5f) {
-			
-			heli_position = pointGrid[100][100] + vec3(0.0f, 100.0f, 0.0f);
+			int i = controlRows - 3;
+			i /= 2;
+			heli_position = pointGrid[i][i] + vec3(0.0f, 100.0f, 0.0f);
 			HVEL = 0.5f;
 			camera_distance = 5.0f;
 			heli_forward = base_forward;
@@ -494,14 +490,12 @@ void Manager::render_helicopter(){
 	
 	glEnable(GL_ALPHA_TEST);
 	
-	
 	auto P = make_shared<MatrixStack>();
 	auto MV = make_shared<MatrixStack>();
 	auto HRot = make_shared<MatrixStack>();
 
 	UpdateRotation(deltaXRot, deltaYRot, deltaZRot, deltaSpeed);
 
-	
 	// Apply camera transforms
 	P->pushMatrix();
 	camera->applyProjectionMatrix(P);
@@ -536,7 +530,7 @@ void Manager::render_helicopter(){
 	skyboxprog->bind();
 	MV->pushMatrix();
 	MV->translate(heli_position);
-	MV->scale(5000.0f); //the mesh is about 3000 units wide, this way the skybox doesnt overlap in any direction, hopefully!
+	MV->scale(10000.0f); //the mesh is about 3000 units wide, this way the skybox doesnt overlap in any direction, hopefully!
 	//zfar exists.
 	
 	//MV->rotate(glm::pi<float>(), vec3(1.0, 0.0, 0.0));
@@ -578,6 +572,7 @@ void Manager::render_helicopter(){
 	#pragma endregion
 
 	mat4 heliM;
+
 	HRot->pushMatrix();
 	#pragma region DrawHelicopter
 	if (!isDead) {
@@ -602,13 +597,13 @@ void Manager::render_helicopter(){
 		}
 
 
-		MV->rotate(pitch_mag * pitch_sign * deg, vec3(0.0f, 0.0f, -1.0f));
-		MV->rotate(yaw_mag * yaw_sign * deg, vec3(0.0f, 1.0f, 0.0f));
-		MV->rotate(roll_mag * roll_sign * deg, vec3(1.0f, 0.0f, 0.0f));
-		
 		HRot->rotate(pitch_mag * pitch_sign * deg, vec3(0.0f, 0.0f, -1.0f));
 		HRot->rotate(yaw_mag * yaw_sign * deg, vec3(0.0f, 1.0f, 0.0f));
 		HRot->rotate(roll_mag * roll_sign * deg, vec3(1.0f, 0.0f, 0.0f));
+		
+		MV->rotate(pitch_mag * pitch_sign * deg, vec3(0.0f, 0.0f, -1.0f));
+		MV->rotate(yaw_mag * yaw_sign * deg, vec3(0.0f, 1.0f, 0.0f));
+		MV->rotate(roll_mag * roll_sign * deg, vec3(1.0f, 0.0f, 0.0f));
 		
 		DrawHelicopter(P, MV, prog, t);
 
@@ -617,18 +612,23 @@ void Manager::render_helicopter(){
 	}
 	//prog->unbind();
 	#pragma endregion
-
+	heliM = HRot->topMatrix();
 	#pragma region Missile
-	if (missileActive) {
-		//step missile in direction
-		missile->pos += 10.0f * normalize(missile->forward);
-		heliM = HRot->topMatrix();
-		missile->draw(P, MV, prog, t, heliM);
-		//we shouldn't be able to get lucky shots like that.
-		if (distance(missile->pos, heli_position) >= 1000.0f) {
-			missileActive = false;
+	cerr << "===" << endl;
+	for (auto m : missileVec) {
+		if (m->active) {
+			cerr << "active: pos = " << m->pos.x << ", " << m->pos.y << ", " << m->pos.z << endl;
+			m->pos += 10.0f * normalize(m->forward);
+			m->draw(P, MV, prog, t, heliM);
+			if (distance(m->pos, heli_position) >= 1000.0f) {
+				m->active = false;
+			}
+		}
+		else {
+			cerr << "inactive" << endl;
 		}
 	}
+	cerr << "===" << endl;
 	#pragma endregion
 
 	HRot->popMatrix();
@@ -639,9 +639,14 @@ void Manager::render_helicopter(){
 		if (ta->active) {
 			remaining++;
 			ta->draw(P, MV, prog, t);
-			if (missileActive) {
-				ta->CheckCollision(missile->pos, ps);
+			for(auto m : missileVec){
+				if (m->active) {
+					if (ta->CheckCollision(m->pos, ps)) {
+						m->active = false; //disable the missile
+					}
+				}
 			}
+			
 		}
 	}
 	#pragma endregion
