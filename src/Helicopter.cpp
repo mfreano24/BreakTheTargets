@@ -364,7 +364,7 @@ void Manager::GenerateTargets() {
 		float target_y = CalculatePoint(cpoints, xi, yi, xf, yf).y;
 
 		//cerr << "target placed @ " << rand_x << ", " << target_y << ", " << rand_z << endl;
-		targets.push_back(make_shared<Target>(vec3(rand_x * XZscale, target_y + 35.0f, rand_z * XZscale), RESOURCE_DIR));
+		targets.push_back(make_shared<Target>(vec3(rand_x * XZscale, target_y + 50.0f, rand_z * XZscale), RESOURCE_DIR));
 	}
 }
 

@@ -21,15 +21,6 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
 
-	if(key == GLFW_KEY_ENTER && action == GLFW_PRESS){
-		Manager::Instance().inMeshCreatorMode = !Manager::Instance().inMeshCreatorMode;
-		Manager::Instance().initTrigger = true;
-	}
-
-	if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-        Manager::Instance().DebugRKey(); //call this
-	}
-
     #pragma region Controls
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
         Manager::Instance().deltaYRot = glm::pi<float>() * (float)1e-2;
@@ -110,10 +101,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	int width, height;
 	glfwGetWindowSize(window, &width, &height);
     if(action == GLFW_PRESS) {
-		bool shift = mods & GLFW_MOD_SHIFT;
-		bool ctrl  = mods & GLFW_MOD_CONTROL;
-		bool alt   = mods & GLFW_MOD_ALT;
-		Manager::Instance().camera->mouseClicked(xmouse, ymouse, shift, ctrl, alt);
+        Manager::Instance().FireMissile();
 	}
 
     
