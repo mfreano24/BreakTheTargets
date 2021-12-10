@@ -642,7 +642,7 @@ void Manager::render_helicopter(){
 			for(auto m : missileVec){
 				if (m->active) {
 					if (ta->CheckCollision(m->pos, ps)) {
-						m->active = false; //disable the missile
+						m->active = false;
 					}
 				}
 			}
@@ -658,7 +658,6 @@ void Manager::render_helicopter(){
 	glEnable(GL_POINT_SPRITE);
 
 	if (ps->isActive) {
-		//cerr << "Particles Active: dt = " << dt << endl;
 		ps->step(dt, P, MV, quadPS, camera_position);
 	}
 

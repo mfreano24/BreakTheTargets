@@ -349,8 +349,8 @@ void Manager::UpdateNoiseMesh(){
 
 			meshZBounds.first = __min(meshZBounds.first, pointGrid[x][y].z);
             meshZBounds.second = __max(meshZBounds.second, pointGrid[x][y].z);
-
-            float variedScale = __max(5.0f, Yscale + 100.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
+            
+            float variedScale = __max(1.0f, Yscale + 100.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
             float diff = perlin->maxY - perlin->minY;
             float progress = perlin->noiseData[x][y] - perlin->minY;
             progress /= diff;
@@ -358,6 +358,10 @@ void Manager::UpdateNoiseMesh(){
             float addtl = 0.0f;
             if (perlin->noiseData[x][y] > 0.7f) {
                 addtl += 100.0f;
+            }
+
+            if (perlin->noiseData[x][y] <= 0.7f) {
+                variedScale = 0.25f;
             }
             pointGrid[x][y].y = variedScale * perlin->noiseData[x][y] + addtl;
         }
