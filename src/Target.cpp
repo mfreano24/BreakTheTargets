@@ -84,6 +84,7 @@ bool Target::CheckCollision(glm::vec3& missilePos, std::shared_ptr<ParticleSyste
 	if (dist_sq <= 110.0f) {
 		//collide!
 		UIManager::Instance().DecrementTargets();
+		
 		active = false;
 
 		ps->kd = randomColor;

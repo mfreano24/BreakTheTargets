@@ -255,7 +255,6 @@ void Manager::UpdateRotation(float _x, float _y, float _z, float _s) {
 #pragma endregion
 
 void Manager::FireMissile() {
-	cerr << "ms_index = " << ms_index << endl;
 	missileVec[ms_index]->active = true;
 	missileVec[ms_index]->pos = heli_position;
 	missileVec[ms_index]->forward = heli_forward;
@@ -464,6 +463,14 @@ void Manager::render_helicopter(){
 			isDead = false;
 		}
 	}
+
+	if (gameWon) {
+		winTimer += dt;
+		if (winTimer >= 2.5f) {
+			//close the window, we win!
+			glfwSetWindowShouldClose(window, GL_TRUE);
+		}
+	}
 	
 	#pragma region SettingUp
 	// Get current frame buffer size.
@@ -642,6 +649,10 @@ void Manager::render_helicopter(){
 			}
 			
 		}
+	}
+
+	if (remaining == 0) {
+		gameWon = true;
 	}
 	#pragma endregion
 	

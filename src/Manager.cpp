@@ -255,7 +255,7 @@ void Manager::GameLoop(GLFWwindow* _window){
     init_helicopter();
     UIManager::Instance().init(window, RESOURCE_DIR);
     
-
+    auto s = chrono::high_resolution_clock::now();
     while(!glfwWindowShouldClose(window)) {
 
         render_helicopter();
@@ -267,6 +267,36 @@ void Manager::GameLoop(GLFWwindow* _window){
 		// Poll for and process events.
 		glfwPollEvents();
 	}
+
+    auto f = chrono::high_resolution_clock::now();
+
+    auto timeTaken = chrono::duration_cast<chrono::seconds>(f - s);
+
+    if (gameWon) {
+        int dur = timeTaken.count();
+        int hours = dur / (60 * 60);
+        dur = dur % (60 * 60);
+        int min = dur / 60;
+        dur = dur % 60;
+        int sec = dur;
+
+        string hour_str = to_string(hours);
+        if (hour_str.length() < 2) {
+            hour_str = "0" + hour_str;
+        }
+
+		string min_str = to_string(min);
+		if (min_str.length() < 2) {
+            min_str = "0" + min_str;
+		}
+
+		string sec_str = to_string(sec);
+		if (sec_str.length() < 2) {
+            sec_str = "0" + sec_str;
+		}
+        
+        cerr << "Complete! Game won in " << hour_str << ":" << min_str << ":" << sec_str << endl;
+    }
 }
 
 unsigned int Manager::LoadCubeMap(){

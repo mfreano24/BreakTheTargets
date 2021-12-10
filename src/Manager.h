@@ -55,6 +55,9 @@ class Manager{
 
         int keyPresses[256] = {0}; // only for English keyboards!
 
+        bool gameWon = false;
+        float winTimer = 0.0f;
+
         std::shared_ptr<Camera> camera;
         //shaders
         std::shared_ptr<Program> prog;
