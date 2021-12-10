@@ -614,21 +614,15 @@ void Manager::render_helicopter(){
 	#pragma endregion
 	heliM = HRot->topMatrix();
 	#pragma region Missile
-	cerr << "===" << endl;
 	for (auto m : missileVec) {
 		if (m->active) {
-			cerr << "active: pos = " << m->pos.x << ", " << m->pos.y << ", " << m->pos.z << endl;
 			m->pos += 10.0f * normalize(m->forward);
 			m->draw(P, MV, prog, t, heliM);
 			if (distance(m->pos, heli_position) >= 1000.0f) {
 				m->active = false;
 			}
 		}
-		else {
-			cerr << "inactive" << endl;
-		}
 	}
-	cerr << "===" << endl;
 	#pragma endregion
 
 	HRot->popMatrix();
